@@ -18,4 +18,4 @@ JOBLOG="${DATENOW}_deepaas.log"
 #JOBPARAMS="-o ${DATENOW}_deepaas.json -t num_epochs=15&run_info=True&network=Resnet50"
 
 echo "Submitting $JOB2RUN.."
-sbatch -p visu --output=$JOBLOG $JOB2RUN $JOBPARAMS
+sbatch --output=$JOBLOG $JOB2RUN $JOBPARAMS
