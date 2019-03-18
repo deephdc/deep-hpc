@@ -221,14 +221,19 @@ function start_service()
         udocker pull ${DockerImage}
         echo Creating container ${ContainerName}
         udocker create --name=${ContainerName} ${DockerImage}
-        [[ "$USE_GPU" = true ]] && udocker setup --nvidia ${ContainerName}
+        [] && 
     else
         echo "=== [INFO] ==="
         echo " ${ContainerName} already exists!"
         echo " Trying to re-use it..."
         echo "=== [INFO] ==="
     fi
-    ##udocker setup --nvidia ${ContainerName}
+    # if GPU is to be used, apply an 'nvidia hack'
+    # and setup the container for GPU
+    if [ "$USE_GPU" = true ]; then
+       nvidia-modprobe -u -c=0
+       udocker setup --nvidia ${ContainerName}
+    fi
 
     MountOpts=""
 
