@@ -14,6 +14,7 @@ JOB2RUN="./deepaas-hpc.sh"
 JOBLOG="${DATENOW}_deepaas.log"
 ### EXAMPLE FOR THE PREDICTION CALL
 #JOBPARAMS="-o ${DATENOW}_deepaas.json -d St_Bernard_Dog_001.jpg"
+
 ### EXAMPLE FOR THE TRAINING CALL
 #JOBPARAMS="-o ${DATENOW}_deepaas.json -t num_epochs=15&run_info=True&network=Resnet50"
 

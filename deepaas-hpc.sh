@@ -11,15 +11,21 @@
 #SBATCH --job-name=deep
 
 ### <<<= SET OF USER PARAMETERS =>>> ###
+# Docker image to download and use
 DockerImage="deephdc/deep-oc-dogs_breed_det:cpu"
-PyPackage="dogs_breed_det"
+# Name for the container to be created (can be arbitrary name)
 ContainerName="deep-oc-dogs-cpu"
+USE_GPU=false
 
 ### Matching between Host directories and Container ones
 # Comment out if not used
-HostData=$HOME/datasets/$PyPackage/data
+#
+# Name of the corresponding Python package
+PyPackage="dogs_breed_det"
+HostData=$HOME/$PyPackage/data
 ContainerData=/srv/$PyPackage/data
-HostModels=$HOME/datasets/$PyPackage/models
+#
+HostModels=$HOME/$PyPackage/models
 ContainerModels=/srv/$PyPackage/models
 ###
 
@@ -46,7 +52,7 @@ flaat_disable="yes"
 ### <<<= MAIN SCRIPT: =>>> ###
 # DEFAULT IP:PORT FOR DEEPaaS API
 deepaas_host=127.0.0.1
-port=5001
+port=5000
 
 debug_it=false
 
@@ -215,6 +221,7 @@ function start_service()
         udocker pull ${DockerImage}
         echo Creating container ${ContainerName}
         udocker create --name=${ContainerName} ${DockerImage}
+        [[ "$USE_GPU" = true ]] && udocker setup --nvidia ${ContainerName}
     else
         echo "=== [INFO] ==="
         echo " ${ContainerName} already exists!"
@@ -227,9 +234,15 @@ function start_service()
 
     if [ ! -z "$HostData" ] && [ ! -z "$ContainerData" ]; then
         MountOpts+=" -v ${HostData}:${ContainerData}"
+
+        # check if local directories exist, create
+        [[ ! -d "$HostData" ]] && mkdir -p $HostData
     fi
     if [ ! -z "$HostModels" ] && [ ! -z "$ContainerModels" ]; then
         MountOpts+=" -v ${HostModels}:${ContainerModels}"
+
+        # check if local directories exist, create
+        [[ ! -d "$HostModels" ]] && mkdir -p $HostModels
     fi
     if [ ! -z "$HostRclone" ] && [ ! -z "$rclone_config" ]; then
         rclone_dir=$(dirname "${rclone_config}")
