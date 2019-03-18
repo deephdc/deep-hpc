@@ -2,27 +2,25 @@
 #
 # This code is distributed under the MIT License
 # Please, see the LICENSE file
-#
+# 2019 Damian Kaliszan, Valentin Kozlov
 
+#SBATCH --partition production
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --output=slurm-%j.out
-#SBATCH -p fast
-
-### DEFAULT IP:PORT FOR DEEPaaS API
-deepaas_host=127.0.0.1
-port=5001
+#SBATCH --ntasks-per-node=24
+#SBATCH --time=3:00:00
+#SBATCH --job-name=deep
 
 ### <<<= SET OF USER PARAMETERS =>>> ###
 DockerImage="deephdc/deep-oc-dogs_breed_det:cpu"
+PyPackage="dogs_breed_det"
 ContainerName="deep-oc-dogs-cpu"
 
 ### Matching between Host directories and Container ones
 # Comment out if not used
-HostData=$HOME/datasets/dogs_breed/data
-ContainerData=/srv/dogs_breed_det/data
-#HostModels=$HOME/datasets/dogs_breed/models
-#ContainerModels=/srv/dogs_breed_det/models
+HostData=$HOME/datasets/$PyPackage/data
+ContainerData=/srv/$PyPackage/data
+HostModels=$HOME/datasets/$PyPackage/models
+ContainerModels=/srv/$PyPackage/models
 ###
 
 
@@ -45,7 +43,11 @@ flaat_disable="yes"
 ### <<<= END OF SET OF USER PARAMETERS =>>> ###
 
 
-### MAIN SCRIPT:
+### <<<= MAIN SCRIPT: =>>> ###
+# DEFAULT IP:PORT FOR DEEPaaS API
+deepaas_host=127.0.0.1
+port=5001
+
 debug_it=false
 
 train_args=""
