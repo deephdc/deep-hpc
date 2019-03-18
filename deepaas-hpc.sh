@@ -221,7 +221,6 @@ function start_service()
         udocker pull ${DockerImage}
         echo Creating container ${ContainerName}
         udocker create --name=${ContainerName} ${DockerImage}
-        [] && 
     else
         echo "=== [INFO] ==="
         echo " ${ContainerName} already exists!"
