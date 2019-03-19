@@ -262,11 +262,11 @@ function start_service()
     # OR via environment settings
     # we skip environment settings if $HostRclone is provided
     if [ -z "$HostRclone" ]; then
-        [[ ! -z "$rclone_type" ]] && EnvOpts+=" -e RCLONE_CONFIG_DEEPNC_TYPE='webdav'"
-        [[ ! -z "$rclone_vendor" ]] && EnvOpts+=" -e RCLONE_CONFIG_DEEPNC_VENDOR='nextcloud'"
-        [[ ! -z "$rclone_url" ]] && EnvOpts+=" -e RCLONE_CONFIG_DEEPNC_URL=${rclone_url}"
-        [[ ! -z "$rclone_user" ]] && EnvOpts+=" -e RCLONE_CONFIG_DEEPNC_USER=$rclone_user"
-        [[ ! -z "$rclone_pass" ]] && EnvOpts+=" -e RCLONE_CONFIG_DEEPNC_PASS=$rclone_pass"
+        [[ ! -z "$rclone_type" ]] && EnvOpts+=" -e RCLONE_CONFIG_RSHARE_TYPE=$rclone_type"
+        [[ ! -z "$rclone_vendor" ]] && EnvOpts+=" -e RCLONE_CONFIG_RSHARE_VENDOR=$rclone_vendor"
+        [[ ! -z "$rclone_url" ]] && EnvOpts+=" -e RCLONE_CONFIG_RSHARE_URL=$rclone_url"
+        [[ ! -z "$rclone_user" ]] && EnvOpts+=" -e RCLONE_CONFIG_RSHARE_USER=$rclone_user"
+        [[ ! -z "$rclone_pass" ]] && EnvOpts+=" -e RCLONE_CONFIG_RSHARE_PASS=$rclone_pass"
     fi
 
     if [ ! -z "$flaat_disable" ]; then
