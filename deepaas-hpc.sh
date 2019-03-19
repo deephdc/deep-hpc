@@ -6,7 +6,7 @@
 
 #SBATCH --partition production
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=24
+#SBATCH --ntasks-per-node=8
 #SBATCH --time=3:00:00
 #SBATCH --job-name=deep
 
