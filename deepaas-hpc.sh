@@ -6,22 +6,22 @@
 
 #SBATCH --partition production
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
-#SBATCH --time=3:00:00
+#SBATCH --ntasks-per-node=4
+#SBATCH --time=2:00:00
 #SBATCH --job-name=deep
 
 ### <<<= SET OF USER PARAMETERS =>>> ###
 # Docker image to download and use
-DockerImage="deephdc/deep-oc-<application>"
+DockerImage="deephdc/deep-oc-dogs_breed_det"
 # Name for the container to be created (can be arbitrary name)
-ContainerName="<application-tag>"
+ContainerName="dogs-cpu"
 USE_GPU=false
 
 ### Matching between Host directories and Container ones
 # Comment out if not used
 #
 # Name of the corresponding Python package
-PyPackage="<application>"
+PyPackage="dogs_breed_det"
 HostData=$HOME/$PyPackage/data
 ContainerData=/srv/$PyPackage/data
 #
