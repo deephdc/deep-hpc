@@ -4,7 +4,7 @@
 # Please, see the LICENSE file
 # 2019 Damian Kaliszan, Valentin Kozlov
 
-#SBATCH --partition normal
+#SBATCH --partition visu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=12
 #SBATCH --time=3:00:00
@@ -12,9 +12,9 @@
 
 ### <<<= SET OF USER PARAMETERS =>>> ###
 ### Container configuration
-DockerImage="deephdc/deep-oc-generic-dev:tf-py2" # deep-oc-generic-dev:tf-gpu-py2
+DockerImage="deephdc/deep-oc-generic-dev:tf-gpu-py2" # deep-oc-generic-dev:tf-gpu-py2
 ContainerName="deep-ddi-gpu-py2"  # deep-ddi-gpu-py2
-USE_GPU=false                     # true
+USE_GPU=true                      # true
 DEEPaaSPort=5000
 JupyterPort=8888
 MonitorPort=6006
