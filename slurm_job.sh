@@ -10,8 +10,13 @@
 # --job-name=deep
 #####################################
 DATENOW=$(date +%y%m%d_%H%M%S)
-JOB2RUN="./deepaas-hpc.sh"
-JOBLOG="${DATENOW}_deepaas.log"
+#JOB2RUN="./deepaas-hpc-dogs.sh"
+JOB2RUN="./deep-ddi-hpc.sh"
+JOBLOG="${DATENOW}_deepaas_job.log"
+
+### SIMPLEST JOBPARAMS
+#JOBPARAMS="-o ${DATENOW}_deepaas.json"
+
 ### EXAMPLE FOR THE PREDICTION CALL
 #JOBPARAMS="-o ${DATENOW}_deepaas.json -d St_Bernard_Dog_001.jpg"
 
