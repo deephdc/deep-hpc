@@ -10,22 +10,25 @@
 # --time=3:00:00
 # --job-name=deep-oc-app
 # --output
+# --gres=gpu:1  # if num_gpus>0 is requisted
 #########################################
 DATENOW=$(date +%y%m%d_%H%M%S)
 
 ### SLURM CONFIG ###
-SLURM_PARTITION="standard"
-SLURM_NODES=1
-SLURM_TIME="3:00:00"
-SLURM_TASKS_PER_NODE=24
-SLURM_JOBNAME="deep-app"
-SLURM_JOBLOG=${DATENOW}-${SLURM_JOBNAME}-log.txt
-SLURM_JOB2RUN="./udocker_job.sh"
+slurm_partition="standard"
+slurm_nodes=1
+slurm_time="3:00:00"
+slurm_tasks_per_node=8
+slurm_jobname="deep-app"
+slurm_joblog=${DATENOW}-${slurm_jobname}-log.txt
+slurm_job2run="./udocker_job.sh"
+slurm_gres=""
 ###
 
 ### DEPLOYMENT MAIN CONFIGURATION (User Action!)
 export DOCKER_IMAGE="deephdc/deep-oc-dogs_breed_det:cpu"
-export UDOCKER_CONTAINER="deep-oc_dogs_breed"
+export UDOCKER_CONTAINER="deep-oc-dogs_breed-cpu"
+export UDOCKER_RECREATE=false
 
 HOST_DIR="$HOME/deep-oc-apps/dogs_breed"
 UCONTAINER_DIR="/mnt/dogs_breed"
@@ -34,17 +37,20 @@ num_gpus=0
 
 flaat_disable="yes"
 
+#... rclone config ...
 rclone_conf="/srv/.rclone/rclone.conf"
 rclone_vendor="nextcloud"
 rclone_type="webdav"
 rclone_url="https://nc.deep-hybrid-datacloud.eu/remote.php/webdav/"
-rclone_user="DEEP-XYXYXYXYXXYXY"
-rclone_password="jXYXYXYXYXXYXYXYXY"
+rclone_user="DEEP-XYXYYXYXYXYXYXYXYXY"
+rclone_password="jXYXYXYXY_XYXYXYXYXY"
 
 app_in_out_base_dir=${UCONTAINER_DIR}
 
 #... run_command configuration ...
-export UDOCKER_RUN_COMMAND="deepaas-cli train \
+export UDOCKER_RUN_COMMAND="deepaas-cli \
+--deepaas_method_output=/mnt/dogs_breed/${DATENOW}-train-out.txt \
+train \
 --num_epochs=5 \
 --sys_info=True \
 --network=Resnet50"
@@ -52,11 +58,12 @@ export UDOCKER_RUN_COMMAND="deepaas-cli train \
 ### END OF DEPLOYMENT MAIN CONFIG ###
 
 ### NEXT IS DERIVED FROM THE OPTIONS ABOVE
-### UDOCKER_USE_GPU ###
-UDOCKER_USE_GPU=false
+#... UDOCKER_USE_GPU ...
+export UDOCKER_USE_GPU=false
 if [ $num_gpus -gt 0 ]; then
     export UDOCKER_USE_GPU=true
-    echo "GPU usage is activated"
+    slurm_gres="--gres=gpu:${num_gpus}"
+    echo "[INFO] GPU usage is activated"
 fi
 
 ### Configure UDOCKER_OPTIONS ###
@@ -73,10 +80,13 @@ MOUNT_OPTIONS="-v ${HOST_DIR}:${UCONTAINER_DIR}"
 export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 
 ### Configure SLURM submission
-sbatch --partition=${SLURM_PARTITION} \
---nodes=${SLURM_NODES} \
---ntasks-per-node=${SLURM_TASKS_PER_NODE} \
---time=${SLURM_TIME} \
---job-name=${SLURM_JOBNAME} \
---output=${SLURM_JOBLOG} \
-${SLURM_JOB2RUN}
+SLURM_OPTIONS="--partition=${slurm_partition} \
+--nodes=${slurm_nodes} \
+--ntasks-per-node=${slurm_tasks_per_node} \
+--time=${slurm_time} \
+--job-name=${slurm_jobname} \
+--output=${slurm_joblog} \
+${slurm_gres}"
+
+# Final submission to SLURM
+sbatch ${SLURM_OPTIONS} ${slurm_job2run}

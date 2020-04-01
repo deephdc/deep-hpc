@@ -1,9 +1,4 @@
 #!/bin/bash
-#SBATCH --time=3:00:00
-#SBATCH --nodes=1
-#SBTACH --ntasks-per-node=24
-#SBATCH --job-name=deep-oc-app
-
 ############################################################################
 # Script that runs a DEEP-OC application via a udocker container.
 #
@@ -12,14 +7,16 @@
 
 
 ##### RUN THE JOB #####
-IFExist=$(udocker ps |grep "${UDOCKER_CONTAINER}")
-if [ ${#IFExist} -le 1 ]; then
+IFContainerExists=$(udocker ps |grep "${UDOCKER_CONTAINER}")
+IFImageExists=$(echo ${IFContainerExists} |grep "${DOCKER_IMAGE}")
+if [ ${#IFImageExists} -le 1 ] || [ ${#IFContainerExists} -le 1 ] || [ "$UDOCKER_RECREATE" = true ]; then
     udocker pull ${DOCKER_IMAGE}
     echo Creating container ${UDOCKER_CONTAINER}
     udocker create --name=${UDOCKER_CONTAINER} ${DOCKER_IMAGE}
 else
     echo "=== [INFO] ==="
     echo " ${UDOCKER_CONTAINER} already exists!"
+    echo " udocker ps: ${IFContainerExists}"
     echo " Trying to re-use it..."
     echo "=== [INFO] ==="
 fi
@@ -28,8 +25,9 @@ fi
 # and setup the container for GPU
 if [ "$UDOCKER_USE_GPU" = true ]; then
     echo "Setting up Nvidia compatibility."
-    nvidia-modprobe -u -c=0  # CURRENTLY only to circumvent a bug 
-    udocker setup --nvidia ${UDOCKER_CONTAINER}
+    #nvidia-modprobe -u -c=0  # CURRENTLY only to circumvent a bug
+    udocker setup --nvidia --force ${UDOCKER_CONTAINER}
+    nvidia-smi
 fi
 
 echo "==================================="
@@ -40,8 +38,6 @@ echo "...UDOCKER_RUN_COMMAND = ${UDOCKER_RUN_COMMAND}"
 echo "==================================="
 
 ### current hack to install deepaas-cli
-#DEEPaaS_CLI_INSTALL="cd /srv && git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS && cd /srv/DEEPaaS && pip install -e ."
-#DEEPaaS_CLI_INSTALL='git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS && cd /srv/DEEPaaS && pip install -e .'
 udocker run ${UDOCKER_CONTAINER} git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS
 udocker run ${UDOCKER_CONTAINER} pip install -e /srv/DEEPaaS
 
