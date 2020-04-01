@@ -19,11 +19,11 @@ SLURM_NODES=1
 SLURM_TIME="3:00:00"
 SLURM_TASKS_PER_NODE=24
 SLURM_JOBNAME="deep-app"
-SLURM_JOBLOG=${DATENOW}-${UDOCKER_CONTAINER}-log.txt
+SLURM_JOBLOG=${DATENOW}-${SLURM_JOBNAME}-log.txt
 SLURM_JOB2RUN="./udocker_job.sh"
 ###
 
-### DEPLOYMENT MAIN CONFIGURATION (User Action)
+### DEPLOYMENT MAIN CONFIGURATION (User Action!)
 export DOCKER_IMAGE="deephdc/deep-oc-dogs_breed_det:cpu"
 export UDOCKER_CONTAINER="deep-oc_dogs_breed"
 
@@ -55,7 +55,7 @@ export UDOCKER_RUN_COMMAND="deepaas-cli train \
 ### UDOCKER_USE_GPU ###
 UDOCKER_USE_GPU=false
 if [ $num_gpus -gt 0 ]; then
-    UDOCKER_USE_GPU=true
+    export UDOCKER_USE_GPU=true
     echo "GPU usage is activated"
 fi
 
@@ -75,7 +75,7 @@ export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 ### Configure SLURM submission
 sbatch --partition=${SLURM_PARTITION} \
 --nodes=${SLURM_NODES} \
---ntasks-per-node={SLURM_TASKS_PER_NODE} \
+--ntasks-per-node=${SLURM_TASKS_PER_NODE} \
 --time=${SLURM_TIME} \
 --job-name=${SLURM_JOBNAME} \
 --output=${SLURM_JOBLOG} \
