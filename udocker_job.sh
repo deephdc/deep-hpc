@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --time=3:00:00
-#SBATCH --partition=tesla
 #SBATCH --nodes=1
 #SBTACH --ntasks-per-node=24
 #SBATCH --job-name=deep-oc-app
@@ -34,11 +33,17 @@ if [ "$UDOCKER_USE_GPU" = true ]; then
 fi
 
 echo "==================================="
-echo "=> udocker container: $UDOCKER_CONTAINER"
+echo "=> udocker container: ${UDOCKER_CONTAINER}"
 echo "=> Running on: $HOSTNAME"
 echo "...UDOCKER_OPTIONS = ${UDOCKER_OPTIONS}"
 echo "...UDOCKER_RUN_COMMAND = ${UDOCKER_RUN_COMMAND}"
 echo "==================================="
+
+### current hack to install deepaas-cli
+#DEEPaaS_CLI_INSTALL="cd /srv && git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS && cd /srv/DEEPaaS && pip install -e ."
+#DEEPaaS_CLI_INSTALL='git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS && cd /srv/DEEPaaS && pip install -e .'
+udocker run ${UDOCKER_CONTAINER} git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS
+udocker run ${UDOCKER_CONTAINER} pip install -e /srv/DEEPaaS
 
 echo "Running the application..."
 udocker run ${UDOCKER_OPTIONS} ${UDOCKER_CONTAINER} ${UDOCKER_RUN_COMMAND}
