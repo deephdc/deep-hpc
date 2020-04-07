@@ -29,6 +29,7 @@ SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 DATENOW=$(date +%y%m%d_%H%M%S)
 
 ### SLURM CONFIG ###
+# For CPU: standard, For GPU: tesla
 slurm_partition="standard"
 slurm_nodes=1
 slurm_time="12:00:00"
@@ -45,6 +46,7 @@ export UDOCKER_CONTAINER="deep-oc-dogs_breed-cpu"
 export UDOCKER_RECREATE=false
 
 MOUNT_OPTIONS="-v $HOME/deep-oc-apps/dogs_breed:/mnt/dogs_breed"
+app_in_out_base_dir="/mnt/dogs_breed"
 
 num_gpus=0
 
@@ -57,8 +59,6 @@ rclone_type="webdav"
 rclone_url="https://nc.deep-hybrid-datacloud.eu/remote.php/webdav/"
 rclone_user="DEEP-XYXYYXYXYXYXYXYXYXY"
 rclone_password="jXYXYXYXY_XYXYXYXYXY"
-
-app_in_out_base_dir=${UCONTAINER_DIR}
 
 #... run_command configuration ...
 export UDOCKER_RUN_COMMAND="deepaas-cli \
