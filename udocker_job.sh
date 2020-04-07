@@ -38,7 +38,7 @@ fi
 
 # if GPU is to be used, apply an 'nvidia hack'
 # and setup the container for GPU
-if [ "$UDOCKER_USE_GPU" = true ]; then
+if echo ${UDOCKER_USE_GPU} |grep -iqF "true"; then
     echo "Setting up Nvidia compatibility."
     #nvidia-modprobe -u -c=0  # CURRENTLY only to circumvent a bug
     udocker setup --nvidia --force ${UDOCKER_CONTAINER}

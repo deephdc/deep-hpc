@@ -14,7 +14,7 @@ It relies on [udocker tool](https://github.com/indigo-dc/udocker) for unprivileg
    - ``num_gpus`` : number of GPUs to be used on one node
    - ``flaat_disable`` : if true, it disables [flaat](https://github.com/indigo-dc/flaat) authentication
    - ``rclone_`` : parameters to configure the [rclone]() tool for copying remote data (webdav)
-   - ``app_in_out_base_dir`` : base directory for input and output data (e.g. training data, models)
+   - ``app_in_out_base_dir`` : base directory for input and output data (e.g. training data, models), e.g. /mnt/data
    - ``UDOCKER_RUN_COMMAND`` : configure the command to run inside the container
    
    internally the script exports ``DOCKER_IMAGE``, ``UDOCKER_CONTAINER``, ``UDOCKER_RECREATE``, ``UDOCKER_USE_GPU``, ``UDOCKER_OPTIONS``, ``UDOCKER_RUN_COMMAND`` to use inside ``udocker_job.sh``
