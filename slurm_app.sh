@@ -1,5 +1,14 @@
 #!/bin/bash
-#########################################
+#
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2018 - 2020 Karlsruhe Institute of Technology - Steinbuch Centre for Computing
+# This code is distributed under the MIT License
+# Please, see the LICENSE file
+#
+# @author: vykozlov
+
+###  INFO  #############################
 # Script to submit a deep-oc application
 # to slurm batch system
 # 
@@ -12,16 +21,21 @@
 # --output
 # --gres=gpu:1  # if num_gpus>0 is requisted
 #########################################
+
+# Script full path
+# https://unix.stackexchange.com/questions/17499/get-path-of-current-script-when-executed-through-a-symlink/17500
+SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
+
 DATENOW=$(date +%y%m%d_%H%M%S)
 
 ### SLURM CONFIG ###
 slurm_partition="standard"
 slurm_nodes=1
-slurm_time="3:00:00"
+slurm_time="12:00:00"
 slurm_tasks_per_node=8
 slurm_jobname="deep-app"
 slurm_joblog=${DATENOW}-${slurm_jobname}-log.txt
-slurm_job2run="./udocker_job.sh"
+slurm_job2run="${SCRIPT_PATH}/udocker_job.sh"
 slurm_gres=""
 ###
 

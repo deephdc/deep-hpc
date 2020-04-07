@@ -1,9 +1,20 @@
 #!/bin/bash
-############################################################################
+#
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2018 - 2020 Karlsruhe Institute of Technology - Steinbuch Centre for Computing
+# This code is distributed under the MIT License
+# Please, see the LICENSE file
+#
+# @author: vykozlov
+#
+
+###  INFO  #################################################################
 # Script that runs a DEEP-OC application via a udocker container.
 #
 # NOTE: The udocker container needs to be set up with nvidia compatibility
 ############################################################################
+
 
 
 ##### RUN THE JOB #####
@@ -11,7 +22,11 @@ IFContainerExists=$(udocker ps |grep "${UDOCKER_CONTAINER}")
 IFImageExists=$(echo ${IFContainerExists} |grep "${DOCKER_IMAGE}")
 if [ ${#IFImageExists} -le 1 ] || [ ${#IFContainerExists} -le 1 ] || [ "$UDOCKER_RECREATE" = true ]; then
     udocker pull ${DOCKER_IMAGE}
-    echo Creating container ${UDOCKER_CONTAINER}
+    if [ ${#IFContainerExists} -gt 1 ]; then
+        echo "Removing container ${UDOCKER_CONTAINER}..."
+        udocker rm ${UDOCKER_CONTAINER}
+    fi
+    echo "Creating container ${UDOCKER_CONTAINER}..."
     udocker create --name=${UDOCKER_CONTAINER} ${DOCKER_IMAGE}
 else
     echo "=== [INFO] ==="
