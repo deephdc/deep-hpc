@@ -10,8 +10,7 @@ It relies on [udocker tool](https://github.com/indigo-dc/udocker) for unprivileg
    - ``DOCKER_IMAGE`` : which docker image to use
    - ``UDOCKER_CONTAINER`` : how to name the container to be used with udocker
    - ``UDOCKER_RECREATE`` : if true, enforce creating container, even it already exists
-   - ``HOST_DIR`` : what host directory to mount inside the container
-   - ``UCONTAINER_DIR`` : mount point inside the container for HOST_DIR
+   - ``MOUNT_OPTIONS`` : what host directory to mount inside the container at what place, starts with "-v", e.g. "-v $HOME/data:/mnt/data"
    - ``num_gpus`` : number of GPUs to be used on one node
    - ``flaat_disable`` : if true, it disables [flaat](https://github.com/indigo-dc/flaat) authentication
    - ``rclone_`` : parameters to configure the [rclone]() tool for copying remote data (webdav)

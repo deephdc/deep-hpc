@@ -44,8 +44,7 @@ export DOCKER_IMAGE="deephdc/deep-oc-dogs_breed_det:cpu"
 export UDOCKER_CONTAINER="deep-oc-dogs_breed-cpu"
 export UDOCKER_RECREATE=false
 
-HOST_DIR="$HOME/deep-oc-apps/dogs_breed"
-UCONTAINER_DIR="/mnt/dogs_breed"
+MOUNT_OPTIONS="-v $HOME/deep-oc-apps/dogs_breed:/mnt/dogs_breed"
 
 num_gpus=0
 
@@ -88,8 +87,6 @@ ENV_OPTIONS="-e RCLONE_CONFIG=${rclone_conf} \
 -e RCLONE_CONFIG_RSHARE_USER=${rclone_user} \
 -e RCLONE_CONFIG_RSHARE_PASS=${rclone_password} \
 -e APP_INPUT_OUTPUT_BASE_DIR=${app_in_out_base_dir}"
-
-MOUNT_OPTIONS="-v ${HOST_DIR}:${UCONTAINER_DIR}"
 
 export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 
