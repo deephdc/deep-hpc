@@ -28,40 +28,44 @@ SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 DATENOW=$(date +%y%m%d_%H%M%S)
 
 ### DEPLOYMENT MAIN CONFIGURATION (User Action!)
-export DOCKER_IMAGE="deephdc/deep-oc-benchmarks_cnn:gpu"
-export UDOCKER_CONTAINER="deep-oc-benchmarks-gpu"
-export UDOCKER_RECREATE=False
-
 ##... SLURM CONFIG ...##
 # For CPU: standard, For GPU: tesla
-slurm_partition="tesla"
+slurm_partition="standard"
 slurm_nodes=1
 slurm_time="12:00:00"
 slurm_tasks_per_node=8
-slurm_jobname=${UDOCKER_CONTAINER}
-slurm_log_dir="${HOME}/tmp/jobs"
-slurm_joblog="${slurm_log_dir}/${DATENOW}-${slurm_jobname}.log"
-slurm_job2run="${SCRIPT_PATH}/udocker_job.sh"
+slurm_log_dir="${HOME}/tmp/slurm_jobs"
+slurm_log=false
+slurm_job2run="${SCRIPT_PATH}/deep-udocker-job.sh"
 ##
 
+## Docker image and container
+export DOCKER_IMAGE="deephdc/deep-oc-benchmarks_cnn:gpu-test"
+export UDOCKER_RECREATE=False
+# OPTIONAL! UDOCKER_CONTAINER is automatically derived from DOCKER_IMAGE later
+export UDOCKER_CONTAINER=""
+##
+
+num_gpus=0
+flaat_disable="yes"
+
 ##... oneclient ..##
+## ONEDATA WORKFLOW IS NOT VERIFIED! vk@2020-04-10
 export ONECLIENT_ACCESS_TOKEN="MDXXX"
 # options: 
 # oprov.ifca.es 
 # oneprovider.fedcloud.eu
 # cloud-90-147-75-163.cloud.ba.infn.it
 export ONECLIENT_PROVIDER_HOST="oprov.ifca.es"
-export ONEDATA_MOUNT_POINT="$HOME/datasets"
+export ONEDATA_MOUNT_POINT="$HOME/onedata"
 ##
 
-mount_options="-v $HOME/deep-oc-apps/benchmarks_cnn:/mnt/benchmarks_cnn"
-app_in_out_base_dir="/mnt/benchmarks_cnn"
-
-num_gpus=2
-flaat_disable="yes"
+host_base_dir="${HOME}/deep-oc-apps"
+mount_extra_options=""
 
 ##... rclone config ...##
-rclone_conf="/srv/.rclone/rclone.conf"
+rclone_conf_host="${HOME}/.config/rclone/rclone.conf"
+rclone_conf_container="/srv/.rclone/rclone.conf"
 rclone_vendor="nextcloud"
 rclone_type="webdav"
 rclone_url="https://nc.deep-hybrid-datacloud.eu/remote.php/webdav/"
@@ -69,9 +73,18 @@ rclone_user="DEEP-XXX"
 rclone_password="jXXX"
 ##
 
-#... run_command configuration ...
-export UDOCKER_RUN_COMMAND="deepaas-cli \
---deepaas_method_output=/mnt/benchmarks_cnn/${DATENOW}-train-out.txt \
+## put the following in functions to be able to update later,
+## if some parameters are re-configured from the command line (CLI)
+function update_inputs()
+{
+   app_in_out_base_dir="/mnt/${UDOCKER_CONTAINER}"
+}
+
+function set_udocker_run_command()
+{
+   # run_command configuration
+   export UDOCKER_RUN_COMMAND="deepaas-cli \
+--deepaas_method_output=${app_in_out_base_dir}/${DATENOW}-train.out \
 train \
 --batch_size_per_device=32 \
 --num_epochs=0 \
@@ -79,6 +92,8 @@ train \
 --model=\"resnet50 (ImageNet)\" \
 --dataset=\"Synthetic data\" \
 --evaluation=true"
+}
+
 ##
 ### END OF THE DEPLOYMENT MAIN CONFIG ###
 
@@ -90,14 +105,18 @@ function usage()
     Options:
     -h|--help \t\t This help message
     -c|--cmd \t\t Command to run inside the Docker image
-    -p|--partition \t Choose which cluster partition to use (e.g. CPU: 'standard', GPU: 'tesla')" 1>&2; exit 0;
-    #-g|--gpus \t\t Number of GPUs to request
+    -d|--docker \t Docker image to run
+    -g|--gpus \t\t Number of GPUs to request
+    -l|--log \t\t If provided, activates SLURM output to the file (see ${slurm_log_dir} directory)
+    -p|--partition \t Choose which cluster partition to use (e.g. CPU: 'standard', GPU: 'tesla')
+    -r|--recreate \t If provided, it forces re-creation of the container
+    -v|--volume \t Host volume (directory), with e.g. ~/data and ~/models, to be mounted inside the container" 1>&2; exit 0;
 }
 
 function check_arguments()
 {
-    OPTIONS=h,c:,g:,p:
-    LONGOPTS=help,cmd:,gpus:,partition:
+    OPTIONS=h,c:,d:,g:,l,p:,r,v:
+    LONGOPTS=help,cmd:,docker:,gpus:,log,partition:,recreate,volume:
     # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
     #set -o errexit -o pipefail -o noclobber -o nounset
     set  +o nounset
@@ -134,8 +153,28 @@ function check_arguments()
                 export UDOCKER_RUN_COMMAND="$2"
                 shift 2
                 ;;
+            -d|--docker)
+                export DOCKER_IMAGE="$2"
+                shift 2
+                ;;
+            -g|--gpus)
+                num_gpus="$2"
+                shift 2
+                ;;
+            -l|--log)
+                slurm_log=true
+                shift
+                ;;
             -p|--partition)
                 slurm_partition="$2"
+                shift 2
+                ;;
+            -r|--recreate)
+                export UDOCKER_RECREATE=true
+                shift
+                ;;
+            -v|--volume)
+                host_base_dir="$2"
                 shift 2
                 ;;
             --)
@@ -150,35 +189,68 @@ function check_arguments()
 }
 
 check_arguments "$0" "$@"
-###
 
 ### NEXT IS DERIVED FROM THE OPTIONS ABOVE
-if [ ! -d ${slurm_log_dir} ]; then
-    mkdir -p ${slurm_log_dir}
+### Derive UDOCKER_CONTAINER name from the image name:
+if [ ${#UDOCKER_CONTAINER} -le 1 ]; then
+    UDOCKER_CONTAINER=${DOCKER_IMAGE}
+    if [[ "$UDOCKER_CONTAINER" =~ .*"/".* ]]; then
+        UDOCKER_CONTAINER=$(echo $UDOCKER_CONTAINER| cut -d'/' -f 2)
+    fi
+    if [[ "$UDOCKER_CONTAINER" =~ "deep-oc-".* ]]; then
+        UDOCKER_CONTAINER=${UDOCKER_CONTAINER#"deep-oc-"}
+    fi
+    # replace ":" with "-"
+    UDOCKER_CONTAINER=${UDOCKER_CONTAINER//:/-}
+    export UDOCKER_CONTAINER=${UDOCKER_CONTAINER}
 fi
+##
 
-echo "=== DATE: ${DATENOW}" >>${slurm_joblog}
+# Update inputs, in case they were re-configured from CLI
+update_inputs
+
+### Set udocker_run_command, if it is not set from CLI
+if [ ${#UDOCKER_RUN_COMMAND} -le 1 ]; then
+    set_udocker_run_command
+fi
+###
 
 ### Configure UDOCKER_OPTIONS ###
-env_options=""
+# Check if host_base_dir exists
+if [ ! -d "$host_base_dir" ]; then
+    mkdir -p "$host_base_dir"
+fi
 
+mount_options="-v ${host_base_dir}:${app_in_out_base_dir} "
+
+env_options=""
+# Define RCLONE config if user and password provided,
+# otherwise mount rclone.conf from the host
 if [ ${#rclone_user} -gt 8 ] && [ ${#rclone_password} -gt 8 ]; then
-    env_options+="-e RCLONE_CONFIG=${rclone_conf} \
+    env_options+="-e RCLONE_CONFIG=${rclone_conf_container} \
 -e RCLONE_CONFIG_RSHARE_TYPE=${rclone_type} \
 -e RCLONE_CONFIG_RSHARE_URL=${rclone_url} \
 -e RCLONE_CONFIG_RSHARE_VENDOR=${rclone_vendor} \
 -e RCLONE_CONFIG_RSHARE_USER=${rclone_user} \
 -e RCLONE_CONFIG_RSHARE_PASS=${rclone_password}"
 else
-    env_options+="-e RCLONE_CONFIG=/srv/.rclone/rclone.conf"
+    env_options+="-e RCLONE_CONFIG=${rclone_conf_container}"
+    if [ -f "$rclone_conf_host" ]; then
+        mount_options+=" -v $(dirname ${rclone_conf_host}):$(dirname ${rclone_conf_container})"
+    fi
 fi
 
-# add app_in_out_base_dir if set
+# Mount extra directories if defined
+if [ ${#mount_extra_options} -ge 5 ]; then
+    mount_options+=" ${mount_extra_options}"
+fi
+
+# Add app_in_out_base_dir if set
 if [ ${#app_in_out_base_dir} -gt 5 ]; then
     env_options+=" -e APP_INPUT_OUTPUT_BASE_DIR=${app_in_out_base_dir}"
 fi
 
-# add flaat env setting
+# Add flaat env setting
 env_options+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$flaat_disable"
 
 export UDOCKER_OPTIONS="${env_options} ${mount_options}"
@@ -188,24 +260,36 @@ SLURM_OPTIONS="--partition=${slurm_partition} \
 --nodes=${slurm_nodes} \
 --ntasks-per-node=${slurm_tasks_per_node} \
 --time=${slurm_time} \
---job-name=${slurm_jobname}"
+--job-name=${UDOCKER_CONTAINER}"
+
+# Check if slurm_log_dir exists
+if [ ! -d "$slurm_log_dir" ]; then
+    mkdir -p "$slurm_log_dir"
+fi
+
+# Default log file
+slurm_log_file="${slurm_log_dir}/${DATENOW}-${UDOCKER_CONTAINER}.log"
+
+echo "=== DATE: ${DATENOW}" >>${slurm_log_file}
+echo "== DOCKER_IMAGE: ${DOCKER_IMAGE}" >>${slurm_log_file}
+echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}" >>${slurm_log_file}
+echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}" >>${slurm_log_file}
+echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}" >>${slurm_log_file}
 
 #... UDOCKER_USE_GPU + slurm's --gres
 export UDOCKER_USE_GPU=false
 if [ $num_gpus -gt 0 ]; then
     export UDOCKER_USE_GPU=true
     SLURM_OPTIONS+=" --gres=gpu:${num_gpus}"
-    echo "=== [INFO] GPU usage is activated" >>${slurm_joblog}
+    echo "== [INFO] GPU usage is activated" >>${slurm_log_file}
 fi
 
-# add job log, if the output file is provided (longer than 5 characters)
-if [ ${#slurm_joblog} -ge 5  ]; then
-    SLURM_OPTIONS+=" --output=${slurm_joblog}"
+# Add job log, if slurm_log is true
+if echo ${slurm_log}| grep -iqF "true"; then
+    SLURM_OPTIONS+=" --output=${slurm_log_file}"
 fi
 
-echo "=== [SLURM settings]" >>${slurm_joblog}
-echo " SLURM OPTIONS = ${SLURM_OPTIONS}" >>${slurm_joblog}
-echo "=== [/SLURM] ===" >>${slurm_joblog}
+echo "== SLURM OPTIONS: ${SLURM_OPTIONS}" >>${slurm_log_file}
 
 # Final submission to SLURM
 sbatch ${SLURM_OPTIONS} ${slurm_job2run}
