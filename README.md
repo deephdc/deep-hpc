@@ -33,17 +33,17 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
    - ``udocker_run_command`` : configure the command to run inside the container.
 
 * ``deep-slurm-app.sh``   - main script to configure the job submission. A user should not really change it. It has the following command line options, which overwrite those set in the INI file:
-    -h|--help \t\t This help message
-    -c|--cmd \t\t Command to run inside the Docker image
-    -d|--docker \t Docker image to run (overwrites ``DOCKER_IMAGE``)
-    -g|--gpus \t\t Number of GPUs to request (overwrites ``NUM_GPUS``)
-    -i|--ini \t\t INI file to load for the default settings (full path!)(default is deep-slurm-app.ini)
-    -l|--log \t\t If provided, activates SLURM output to the file (see ${slurm_log_dir} directory) (overwrites ``SLURM_LOG``)
-    -p|--partition \t Choose which cluster partition to use (e.g. CPU: 'standard', GPU: 'tesla') (overwrites ``SLURM_PARTITION``)
-    -r|--recreate \t If provided, it forces re-creation of the container (overwrites ``UDOCKER_RECREATE``)
-    -v|--volume \t Host volume (directory), with e.g. ~/data and ~/models, to be mounted inside the container (overwrites ``HOST_BASE_DIR``)
-   
-   internally the script exports ``DOCKER_IMAGE``, ``UDOCKER_CONTAINER``, ``UDOCKER_RECREATE``, ``UDOCKER_USE_GPU``, ``UDOCKER_OPTIONS``, ``UDOCKER_RUN_COMMAND`` to be used inside ``deep-udocker-job.sh``
+```
+    -h|--help      This help message
+    -c|--cmd       Command to run inside the Docker image
+    -d|--docker    Docker image to run (overwrites ``DOCKER_IMAGE``)
+    -g|--gpus      Number of GPUs to request (overwrites ``NUM_GPUS``)
+    -i|--ini       INI file to load for the default settings (full path!)(default is deep-slurm-app.ini)
+    -l|--log       If provided, activates SLURM output to the file (see ${slurm_log_dir} directory) (overwrites ``SLURM_LOG``)
+    -p|--partition Choose which cluster partition to use (e.g. CPU: 'standard', GPU: 'tesla') (overwrites ``SLURM_PARTITION``)
+    -r|--recreate  If provided, it forces re-creation of the container (overwrites ``UDOCKER_RECREATE``)
+    -v|--volume    Host volume (directory), with e.g. ~/data and ~/models, to be mounted inside the container (overwrites ``HOST_BASE_DIR``)
+```
    
 * ``deep-udocker-job.sh`` : script to pull a Docker image, configure udocker container and run a command inside the container. In general, it does not need changes by a user.
 
