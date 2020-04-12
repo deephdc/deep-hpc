@@ -26,7 +26,9 @@ echo
 sleep 2
 
 echo "[TEST: Use another INI file, other docker image, trigger container recreation, slurm logging, cmd (CPU)]"
-../deep-slurm-app -i deep-slurm-tests.ini -d deephdc/deep-oc-dogs_breed_det:cpu-test -r -l -c "deepaas-cli get_metadata"
+# N.B.: Escaping \$ in front of the variable does not expand it but transfers as variable name
+../deep-slurm-app -i deep-slurm-tests.ini -d deephdc/deep-oc-dogs_breed_det:cpu-test -r -l \
+-c "deepaas-cli --deepaas_method_output=\$APP_IN_OUT_BASE_DIR/get_metadata.out get_metadata"
 echo
 sleep 2
 

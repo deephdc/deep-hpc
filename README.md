@@ -60,11 +60,11 @@ deep-slurm-app.sh
 ```
 deep-slurm-app.sh -p tesla -l -g 1
 ```
-* Read default settings from ``deep-slurm-app.ini`` but use another docker image, trigger recreation of the container, slurm logging, re-define which command to run inside the container:
+* Read settings from another INI file, use other docker image, trigger recreation of the container, slurm logging, re-define which command to run inside the container:
 ```
-deep-slurm-app.sh -l -r -d deephdc/deep-oc-dogs_breed_det:cpu-test -c "deepaas-cli get_metadata"
+deep-slurm-app.sh -i deep-slurm-tests.ini -d deephdc/deep-oc-dogs_breed_det:cpu-test -r -l -c "deepaas-cli get_metadata"
 ```
-* Use another INI file, re-define slurm partition, slurm logging, number of GPUs, re-define host_base_dir (-v), which command to run inside the container:
+* Use another INI file, re-define slurm partition, slurm logging, number of GPUs, re-define host_base_dir (-v), which command to run inside the container (first copy St_Bernard_wiki_3.jpg to $HOME/tmp/dogs_breed (!)):
 ```
 deep-slurm-app.sh -p tesla -l -g 1 -i tests/deep-slurm-tests.ini -v "$HOME/tmp/dogs_breed" \
 -c "deepaas-cli predict --files=\${APP_IN_OUT_BASE_DIR}/St_Bernard_wiki_3.jpg"
