@@ -12,24 +12,24 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
    - ``slurm_tasks_per_node`` : number of tasks to be initiated on each node (default 8)
    - ``slurm_log`` : if true, the batch script's standard output is directed to the file (default false)
    - ``slurm_extra_options`` : any other SLURM option to activate. For more info, please, check [sbatch](https://slurm.schedmd.com/sbatch.html)
-   - ``docker_image`` : which docker image to use
-   - ``udocker_recreate`` : if true, enforce creating container, even if it already exists
+   - ``docker_image`` : which docker image to use.
+   - ``udocker_recreate`` : if true, enforce creating container, even if it already exists.
    - ``udocker_container`` : OPTIONAL! It is interannly derived from DOCKER_IMAGE, but one can re-define it by providing the value here. If empty, ``udocker_container`` is defined by removing the repository name and "deep-oc-" if present, and adding the tag into the name. For example: ``docker_image=deephdc/deep-oc-dogs_breed_det:gpu`` becomes ``udocker_container=dogs_breed_det-gpu``
-   - ``num_gpus`` : number of GPUs to be used on one node
-   - ``flaat_disable`` : if true, it disables [flaat](https://github.com/indigo-dc/flaat) authentication
+   - ``num_gpus`` : number of GPUs to be used on one node.
+   - ``flaat_disable`` : if true, it disables [flaat](https://github.com/indigo-dc/flaat) authentication.
    - ``oneclient_access_token`` : ACCESS TOKEN for oneclient (not tested yet!)
    - ``oneclient_provider_host`` : which ONEDATA provider to connect to. (not tested yet!)
    - ``onedata_mount_point`` : in what directory to mount the onedata space (not tested yet!)
    - ``host_base_dir`` : directory on the host, where e.g. ~/data and ~/models directories are located. If empty, automatically assigned to $HOME/deep-oc-apps/$UDOCKER_CONTAINER.
-   - ``app_in_out_base_dir`` : OPTIONAL! It is internally set to /mnt/$UDOCKER_CONTAINER but one can re-define it by providing the value here. Base directory for input and output data (e.g. training data, models) inside the container
+   - ``app_in_out_base_dir`` : OPTIONAL! It is internally set to /mnt/$UDOCKER_CONTAINER but one can re-define it by providing the value here. Base directory for input and output data (e.g. training data, models) **inside the container**.
    - ``mount_extra_options`` : One may provide more options for mounting inside the container (Docker syntax, e.g. "-v /tmp:/tmp" to mount host /tmp at /tmp inside the container.
    - ``rclone_conf_host`` : location of rclone.conf file on the host (default $HOME/.config/rclone/rclone.conf). If provided, the rest rclone settings (see below) are ignored.
    - ``rclone_conf_container`` : where rclone.conf is expected inside the container (default /srv/.rclone/rclone.conf)
    - ``rclone_conf_vendor`` : rclone vendor (e.g. nextcloud)
    - ``rclone_conf_type`` : remote storage type (e.g. webdav)
-   - ``rclone_conf_url`` : remote storage link to be accessed via rclone
-   - ``rclone_conf_user`` : rclone user to access a remote storage
-   - ``rclone_conf_password`` : rclone password to access a remote storage
+   - ``rclone_conf_url`` : remote storage link to be accessed via rclone.
+   - ``rclone_conf_user`` : rclone user to access a remote storage.
+   - ``rclone_conf_password`` : rclone password to access a remote storage.
    - ``udocker_run_command`` : configure the command to run inside the container.
 
 * ``deep-slurm-app.sh``   - script that configure the job submission (slurm). A user should not really change it. It reads ``deep-slurm-app.ini`` for default settings but some options can be re-defined from the command line:
@@ -58,13 +58,13 @@ deep-slurm-app.sh
 ```
 * Read default settings from ``deep-slurm-app.ini`` but re-define slurm partition, number of gpus, and slurm logging from the command line:
 ```
-deep-slurm-app.sh -p tesla -g 1 -l
+deep-slurm-app.sh -p tesla -l -g 1
 ```
 * Read default settings from ``deep-slurm-app.ini`` but use another docker image, trigger recreation of the container, slurm logging, re-define which command to run inside the container:
 ```
 deep-slurm-app.sh -l -r -d deephdc/deep-oc-dogs_breed_det:cpu-test -c "deepaas-cli get_metadata"
 ```
-* Use another INI file, re-define slurm partition, slurm_logging, number of GPUs, re-define host_base_dir (-v), which command to run inside the container:
+* Use another INI file, re-define slurm partition, slurm logging, number of GPUs, re-define host_base_dir (-v), which command to run inside the container:
 ```
 deep-slurm-app.sh -p tesla -l -g 1 -i tests/deep-slurm-tests.ini -v "$HOME/tmp/dogs_breed" \
 -c "deepaas-cli predict --files=\${APP_IN_OUT_BASE_DIR}/St_Bernard_wiki_3.jpg"

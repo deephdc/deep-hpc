@@ -181,7 +181,17 @@ export ONECLIENT_ACCESS_TOKEN="$oneclient_access_token"
 export ONECLIENT_PROVIDER_HOST="$oneclient_provider_host"
 export ONEDATA_MOUNT_POINT="$onedata_mount_point"
 
-[[ ${#HOST_BASE_DIR} -lt 1 ]] && HOST_BASE_DIR=$host_base_dir
+## if host_base_dir and HOST_BASE_DIR are NOT provided 
+## in either INI or from CLI, define it as $HOME/deep-oc-apps/$UDOCKER_CONTAINER
+if [ ${#host_base_dir} -le 1 ] && [ ${#HOST_BASE_DIR} -le 1 ]; then
+    HOST_BASE_DIR="$HOME/deep-oc-apps/$UDOCKER_CONTAINER"
+fi
+## if host_base_dir is configured in INI, but no CLI option provided,
+## set HOST_BASE_DIR to host_base_dir
+if [ ${#host_base_dir} -gt 1 ] && [ ${#HOST_BASE_DIR} -le 1 ]; then
+    HOST_BASE_DIR="$host_base_dir"
+fi
+## in other cases HOST_BASE_DIR is taken from CLI
 
 ## if app_in_out_base_dir is provided in the INI, use it,
 ## otherwise define it as /mnt/$UDOCKER_CONTAINER
@@ -220,40 +230,40 @@ fi
 # Check if HOST_BASE_DIR is set and exists
 if [ ${#HOST_BASE_DIR} -gt 1 ]; then
     [[ ! -d "$HOST_BASE_DIR" ]] && mkdir -p "$HOST_BASE_DIR"
-    mount_options="-v ${HOST_BASE_DIR}:${APP_IN_OUT_BASE_DIR} "
+    MOUNT_OPTIONS="-v ${HOST_BASE_DIR}:${APP_IN_OUT_BASE_DIR} "
 else 
-    mount_options=""
+    MOUNT_OPTIONS=""
 fi
 
-env_options=""
+ENV_OPTIONS=""
 # Define RCLONE config if user and password are provided,
 # otherwise mount rclone.conf from the host
 if [ ${#RCLONE_USER} -gt 8 ] && [ ${#RCLONE_PASSWORD} -gt 8 ]; then
-    env_options+="-e RCLONE_CONFIG=${RCLONE_CONF_CONTAINER} \
+    ENV_OPTIONS+="-e RCLONE_CONFIG=${RCLONE_CONF_CONTAINER} \
 -e RCLONE_CONFIG_RSHARE_TYPE=${RCLONE_TYPE} \
 -e RCLONE_CONFIG_RSHARE_URL=${RCLONE_URL} \
 -e RCLONE_CONFIG_RSHARE_VENDOR=${RCLONE_VENDOR} \
 -e RCLONE_CONFIG_RSHARE_USER=${RCLONE_USER} \
 -e RCLONE_CONFIG_RSHARE_PASS=${RCLONE_PASSWORD}"
 else
-    env_options+="-e RCLONE_CONFIG=${RCLONE_CONF_CONTAINER}"
+    ENV_OPTIONS+="-e RCLONE_CONFIG=${RCLONE_CONF_CONTAINER}"
     if [ -f "$RCLONE_CONF_HOST" ]; then
-        mount_options+=" -v $(dirname ${RCLONE_CONF_HOST}):$(dirname ${RCLONE_CONF_CONTAINER})"
+        MOUNT_OPTIONS+=" -v $(dirname ${RCLONE_CONF_HOST}):$(dirname ${RCLONE_CONF_CONTAINER})"
     fi
 fi
 
 # Mount extra directories if defined
-[[ ${#MOUNT_EXTRA_OPTIONS} -ge 5 ]] && mount_options+=" ${MOUNT_EXTRA_OPTIONS}"
+[[ ${#MOUNT_EXTRA_OPTIONS} -ge 5 ]] && MOUNT_OPTIONS+=" ${MOUNT_EXTRA_OPTIONS}"
 
 # Add APP_INPUT_OUTPUT_BASE_DIR environment, if APP_IN_OUT_BASE_DIR is set
 if [ ${#APP_IN_OUT_BASE_DIR} -gt 5 ]; then
-    env_options+=" -e APP_INPUT_OUTPUT_BASE_DIR=${APP_IN_OUT_BASE_DIR}"
+    ENV_OPTIONS+=" -e APP_INPUT_OUTPUT_BASE_DIR=${APP_IN_OUT_BASE_DIR}"
 fi
 
 # Add flaat env setting
-env_options+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$FLAAT_DISABLE"
+ENV_OPTIONS+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$FLAAT_DISABLE"
 
-export UDOCKER_OPTIONS="${env_options} ${mount_options}"
+export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 
 ### Configure SLURM submission
 # Check if SLURM_LOG_DIR exists
@@ -265,8 +275,10 @@ slurm_log_file="${SLURM_LOG_DIR}/${DATENOW}-${UDOCKER_CONTAINER}.log"
 echo "=== DATE: ${DATENOW}" >>${slurm_log_file}
 echo "== DOCKER_IMAGE: ${DOCKER_IMAGE}" >>${slurm_log_file}
 echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}" >>${slurm_log_file}
-# [!] Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
-# echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}" >>${slurm_log_file}
+## (!]) Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
+## echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}" >>${slurm_log_file}
+echo "== UDOCKER MOUNT_OPTIONS: ${MOUNT_OPTIONS}" >>${slurm_log_file}
+echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (!)" >>${slurm_log_file}
 echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}" >>${slurm_log_file}
 
 SLURM_OPTIONS="--partition=${SLURM_PARTITION} \
