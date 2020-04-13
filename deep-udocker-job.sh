@@ -18,6 +18,11 @@ function print_date()
     echo $(date +'%Y-%m-%d %H:%M:%S')
 }
 
+## print SLURM_JOBID
+echo
+echo "== SLURM_JOBID: ${SLURM_JOBID}"
+echo
+
 ##### MOUNT ONEDATA on the HOST #####
 if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ] && [ ${#ONECLIENT_PROVIDER_HOST} -gt 8 ]; then
    # check if the local mount point exists
