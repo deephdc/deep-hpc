@@ -18,10 +18,17 @@ function print_date()
     echo $(date +'%Y-%m-%d %H:%M:%S')
 }
 
-## print SLURM_JOBID
-echo
-echo "== SLURM_JOBID: ${SLURM_JOBID}"
-echo
+echo "=== DATE: $(print_date)"
+echo "== DOCKER_IMAGE: ${DOCKER_IMAGE}"
+echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}"
+## (!) Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
+echo "== UDOCKER MOUNT_OPTIONS: ${MOUNT_OPTIONS}"
+echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (!)"
+echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}"
+echo "== SLURM_JOBID: ${SLURM_JOB_ID}"
+echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : time): \
+$SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_TIMELIMIT"
+echo ""
 
 ##### MOUNT ONEDATA on the HOST #####
 if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ] && [ ${#ONECLIENT_PROVIDER_HOST} -gt 8 ]; then
@@ -38,6 +45,7 @@ if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ] && [ ${#ONECLIENT_PROVIDER_HOST} -gt 8 ]
    echo "== [/ONEDATA]"
 fi
 ####
+echo ""
 
 ##### RUN THE JOB #####
 IFContainerExists=$(udocker ps |grep "${UDOCKER_CONTAINER}")
@@ -60,6 +68,7 @@ else
     echo "= Trying to re-use it..."
     echo "== [/INFO]"
 fi
+echo ""
 
 # if GPU is to be used, apply an 'nvidia hack'
 # and setup the container for GPU
@@ -71,11 +80,7 @@ if echo ${UDOCKER_USE_GPU} |grep -iqF "true"; then
     udocker run ${UDOCKER_CONTAINER} nvidia-smi
     echo "== [/NVIDIA]"
 fi
-
-echo "== [INFO: $(print_date) ]"
-echo "= udocker container: ${UDOCKER_CONTAINER}"
-echo "= Running on: $HOSTNAME"
-echo "== [/INFO]"
+echo ""
 
 ### current hack to install deepaas-cli
 echo "== [DEEPaaS: $(print_date) ]"
@@ -89,8 +94,8 @@ else
 fi
 echo -n "= " && type -a deepaas-cli
 EOF
-
 echo "== [/DEEPaaS]"
+echo ""
 
 echo "== [RUN: $(print_date) ] Running the application..."
 udocker run ${UDOCKER_OPTIONS} ${UDOCKER_CONTAINER} /bin/bash <<EOF
