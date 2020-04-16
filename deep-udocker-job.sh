@@ -18,6 +18,12 @@ function print_date()
     echo $(date +'%Y-%m-%d %H:%M:%S')
 }
 
+function short_date()
+{
+    echo $(date +'%y%m%d_%H%M%S')
+}
+
+
 echo "=== DATE: $(print_date)"
 echo "== DOCKER_IMAGE: ${DOCKER_IMAGE}"
 echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}"
@@ -29,6 +35,28 @@ echo "== SLURM_JOBID: ${SLURM_JOB_ID}"
 echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : time): \
 $SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_TIMELIMIT"
 echo ""
+
+##### CHECK for udocker and INSTALL if missing ######
+export PATH="$HOME/udocker:$PATH"
+echo "== [udocker check: $(print_date) ]"
+if command udocker version 2>/dev/null; then
+   echo "= udocker is present!"
+else
+   echo "= [WARNING: $(print_date) ]: udocker is NOT found. Trying to install..."
+   [[ -d "$HOME/udocker" ]] && mv "$HOME/udocker" "$HOME/udocker-$(short_date).bckp"
+   echo "= Downloading from $UDOCKER_DOWNLOAD_LINK"
+   cd $HOME && wget $UDOCKER_DOWNLOAD_LINK
+   udocker_tar="${UDOCKER_DOWNLOAD_LINK##*/}"
+   tar zxvf "$udocker_tar"
+
+   if command udocker version 2>/dev/null; then
+       echo "= [INFO: $(print_date)] Now udocker is found!"
+   else
+       echo "[ERROR: $(print_date)] hmm... udocker is still NOT found! Exiting..."
+       exit 1
+   fi
+fi
+echo "== [/udocker check]"
 
 ##### MOUNT ONEDATA on the HOST #####
 if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ] && [ ${#ONECLIENT_PROVIDER_HOST} -gt 8 ]; then

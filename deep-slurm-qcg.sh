@@ -17,6 +17,7 @@
 # This script's full path
 # https://unix.stackexchange.com/questions/17499/get-path-of-current-script-when-executed-through-a-symlink/17500
 SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
+export UDOCKER_DOWNLOAD_LINK="https://github.com/indigo-dc/udocker/releases/download/devel3_1.2.4/udocker-1.2.4.tar.gz"
 
 ### (!) For testing (!)
 ### default is false

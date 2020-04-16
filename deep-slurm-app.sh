@@ -21,8 +21,8 @@ SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 
 ### INITIALIZATION OF PARAMETERS
 DATENOW=$(date +%y%m%d_%H%M%S)
-
 SCRIPT_INI="${SCRIPT_PATH}/deep-slurm-app.ini"
+export UDOCKER_DOWNLOAD_LINK="https://github.com/indigo-dc/udocker/releases/download/devel3_1.2.4/udocker-1.2.4.tar.gz"
 
 ##... SLURM ...##
 SLURM_PARTITION=""
