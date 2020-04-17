@@ -8,10 +8,9 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
 * ``deep-slurm-app.ini`` - main inizialization file to configure job submission for your application.
    - ``slurm_partition`` : which partition to use. Default is 'standard' (for CPU jobs). If you need to use GPU, set to 'tesla' (PSNC)
    - ``slurm_nodes`` : number of nodes requested for the job (default=1)
-   - ``slurm_time`` : limit on the total run time of the job allocation (default 12 hours, 12:00:00)
    - ``slurm_tasks_per_node`` : number of tasks to be initiated on each node (default 8)
    - ``slurm_log`` : if true, the batch script's standard output is directed to the file (default false)
-   - ``slurm_extra_options`` : any other SLURM option to activate. For more info, please, check [sbatch](https://slurm.schedmd.com/sbatch.html)
+   - ``slurm_extra_options`` : any other SLURM option to activate, e.g. "--time=12:00:00" would limit execution time to 12 hours. For more info, please, check [sbatch](https://slurm.schedmd.com/sbatch.html)
    - ``docker_image`` : which docker image to use.
    - ``udocker_recreate`` : if true, enforce creating container, even if it already exists.
    - ``udocker_container`` : OPTIONAL! It is interannly derived from DOCKER_IMAGE, but one can re-define it by providing the value here. If empty, ``udocker_container`` is defined by removing the repository name and "deep-oc-" if present, and adding the tag into the name. For example: ``docker_image=deephdc/deep-oc-dogs_breed_det:gpu`` becomes ``udocker_container=dogs_breed_det-gpu``
@@ -33,6 +32,8 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
    - ``udocker_run_command`` : configure the command to run inside the container.
 
 * ``deep-slurm-app.sh``   - script that configure the job submission (slurm). A user should not really change it. It reads ``deep-slurm-app.ini`` for default settings but some options can be re-defined from the command line:
+
+* ``deep-slurm-qcg.sh``  - script for the integration with [QCG](http://www.qoscosgrid.org/trac/qcg-computing) system of PSNC cluster.
 
 ```
     -h|--help      This help message
