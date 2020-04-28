@@ -49,6 +49,10 @@ topology_template:
       type: integer
       required: no
       default: 2
+    num_gpus:
+      type: integer
+      required: no
+      default: 0
     total_nodes:
       type: integer
       required: no
@@ -96,4 +100,5 @@ topology_template:
           ONECLIENT_PROVIDER_HOST: "oneprovider-beta-2.cloud.ba.infn.it"
           ONEDATA_MOUNT_POINT: { get_input: onedata_mount_point }
           UDOCKER_RUN_COMMAND: { get_input: run_command }
-          APP_IN_OUT_BASE_DIR: { get_input: app_in_out_base_dir ] }
+          APP_IN_OUT_BASE_DIR: { get_input: app_in_out_base_dir }
+          NUM_GPUS: { get_input: num_gpus }
