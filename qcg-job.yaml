@@ -37,6 +37,14 @@ topology_template:
       type: string
       required: no
       default: "/mnt/onedata"
+    rclone_conf_host:
+      type: string
+      required: no
+      default: ""
+    rclone_conf_container:
+      type: string
+      required: no
+      default: "/srv/.rclone/rclone.conf"
     app_in_out_base_dir:
       type: string
       required: no
@@ -99,6 +107,8 @@ topology_template:
           ONECLIENT_ACCESS_TOKEN: { get_attribute : [ onedata_space, token ] }
           ONECLIENT_PROVIDER_HOST: "oneprovider-beta-2.cloud.ba.infn.it"
           ONEDATA_MOUNT_POINT: { get_input: onedata_mount_point }
-          UDOCKER_RUN_COMMAND: { get_input: run_command }
+          RCLONE_CONF_HOST: { get_input: rclone_conf_host }
+          RCLONE_CONF_CONTAINER: { get_input: rclone_conf_container }
           APP_IN_OUT_BASE_DIR: { get_input: app_in_out_base_dir }
+          UDOCKER_RUN_COMMAND: { get_input: run_command }
           NUM_GPUS: { get_input: num_gpus }

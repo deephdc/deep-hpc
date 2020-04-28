@@ -37,6 +37,8 @@ orchent depcreate $topology_file '{ "docker_image": "deephdc/deep-oc-dogs_breed_
                                     "udocker_extra_options": "",
                                     "onedata_space_name": "datahpc",
                                     "onedata_mount_point": "/mnt/onedata",
+                                    "rclone_conf_host": "$HOME/.config/rclone/rclone.conf",
+                                    "rclone_conf_container": "/srv/.rclone/rclone.conf",
                                     "app_in_out_base_dir": "/mnt/onedata/datahpc/dogs_breed",
                                     "num_gpus": "0",
                                     "total_cores": "2",
