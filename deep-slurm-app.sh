@@ -21,8 +21,8 @@ SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 
 ### INITIALIZATION OF PARAMETERS
 DATENOW=$(date +%y%m%d_%H%M%S)
-
 SCRIPT_INI="${SCRIPT_PATH}/deep-slurm-app.ini"
+export UDOCKER_DOWNLOAD_LINK="https://github.com/indigo-dc/udocker/releases/download/devel3_1.2.4/udocker-1.2.4.tar.gz"
 
 ##... SLURM ...##
 SLURM_PARTITION=""
@@ -147,7 +147,6 @@ source "${SCRIPT_INI}"
 [[ ${#SLURM_LOG} -lt 1 ]] && SLURM_LOG=$slurm_log
 SLURM_NODES=$slurm_nodes
 SLURM_TASKS_PER_NODE=$slurm_tasks_per_node
-SLURM_TIME=$slurm_time
 SLURM_EXTRA_OPTIONS=$slurm_extra_options
 
 ## Docker image and container
@@ -263,46 +262,33 @@ fi
 # Add flaat env setting
 ENV_OPTIONS+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$FLAAT_DISABLE"
 
+export MOUNT_OPTIONS=${MOUNT_OPTIONS}
 export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 
 ### Configure SLURM submission
-# Check if SLURM_LOG_DIR exists
-[[ ! -d "$SLURM_LOG_DIR" ]] && mkdir -p "$SLURM_LOG_DIR"
-
-# Default log file
-slurm_log_file="${SLURM_LOG_DIR}/${DATENOW}-${UDOCKER_CONTAINER}.log"
-
-echo "=== DATE: ${DATENOW}" >>${slurm_log_file}
-echo "== DOCKER_IMAGE: ${DOCKER_IMAGE}" >>${slurm_log_file}
-echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}" >>${slurm_log_file}
-## (!]) Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
-## echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}" >>${slurm_log_file}
-echo "== UDOCKER MOUNT_OPTIONS: ${MOUNT_OPTIONS}" >>${slurm_log_file}
-echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (!)" >>${slurm_log_file}
-echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}" >>${slurm_log_file}
-
-SLURM_OPTIONS="--partition=${SLURM_PARTITION} \
---nodes=${SLURM_NODES} \
---ntasks-per-node=${SLURM_TASKS_PER_NODE} \
---time=${SLURM_TIME} \
---job-name=${UDOCKER_CONTAINER}"
-
-[[ ${#SLURM_EXTRA_OPTIONS} -ge 1 ]] && SLURM_OPTIONS+=" ${SLURM_EXTRA_OPTIONS}"
 
 #... UDOCKER_USE_GPU + slurm's --gres
 export UDOCKER_USE_GPU=false
 if [ $NUM_GPUS -gt 0 ]; then
     export UDOCKER_USE_GPU=true
-    SLURM_OPTIONS+=" --gres=gpu:${NUM_GPUS}"
-    echo "== [INFO] GPU usage is activated" >>${slurm_log_file}
+    SLURM_EXTRA_OPTIONS+=" --gres=gpu:${NUM_GPUS}"
 fi
+
+SLURM_OPTIONS="--partition=${SLURM_PARTITION} \
+--nodes=${SLURM_NODES} \
+--ntasks-per-node=${SLURM_TASKS_PER_NODE} \
+--job-name=${UDOCKER_CONTAINER}"
 
 # Add job log, if SLURM_LOG is true
 if echo ${SLURM_LOG}| grep -iqF "true"; then
+    # Check if SLURM_LOG_DIR exists
+    [[ ! -d "$SLURM_LOG_DIR" ]] && mkdir -p "$SLURM_LOG_DIR"
+    # Default log file
+    slurm_log_file="${SLURM_LOG_DIR}/${DATENOW}-${UDOCKER_CONTAINER}.log"
     SLURM_OPTIONS+=" --output=${slurm_log_file}"
 fi
 
-echo "== SLURM OPTIONS: ${SLURM_OPTIONS}" >>${slurm_log_file}
+[[ ${#SLURM_EXTRA_OPTIONS} -ge 1 ]] && SLURM_OPTIONS+=" ${SLURM_EXTRA_OPTIONS}"
 
 # Final submission to SLURM
 sbatch ${SLURM_OPTIONS} ${SLURM_JOB2RUN}
