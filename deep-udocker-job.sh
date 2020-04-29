@@ -118,9 +118,7 @@ echo ""
 echo "== [DEEPaaS: $(print_date) ]"
 udocker run ${UDOCKER_CONTAINER} /bin/bash <<EOF
 if [ ! -f /usr/bin/deepaas-cli ] && [ ! -f /usr/local/bin/deepaas-cli ]; then
-    [[ -d DEEPaaS ]] && rm -rf DEEPaaS
-    git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS
-    pip install -e DEEPaaS
+    pip install --no-cache-dir 'deepaas>=1.3.0'
 else
     echo "= deepaas-cli is found"
 fi

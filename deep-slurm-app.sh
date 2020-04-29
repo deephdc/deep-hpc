@@ -36,7 +36,8 @@ UDOCKER_RECREATE=""
 
 NUM_GPUS=""
 
-HOST_BASE_DIR=""
+HOST_DIR=""
+APP_IN_OUT_DIR=""
 UDOCKER_RUN_COMMAND=""
 
 ### USAGE and PARSE SCRIPT FLAGS
@@ -121,7 +122,7 @@ function check_arguments()
                 shift
                 ;;
             -v|--volume)
-                HOST_BASE_DIR="$2"
+                HOST_DIR="$2"
                 shift 2
                 ;;
             --)
@@ -172,35 +173,34 @@ fi
 
 [[ ${#NUM_GPUS} -lt 1 ]] && NUM_GPUS=$num_gpus
 
+## ports
+deepaasPORT=5000
+monitorPORT=6006
+jupyterPORT=8888
+
+## FLAAT. IMPORTANT TO DISABLE!
 FLAAT_DISABLE=$flaat_disable
 
 ## oneclient config
-## ONEDATA WORKFLOW IS NOT VERIFIED! vk@2020-04-10
 export ONECLIENT_ACCESS_TOKEN="$oneclient_access_token"
 export ONECLIENT_PROVIDER_HOST="$oneclient_provider_host"
-export ONEDATA_MOUNT_POINT="$onedata_mount_point"
+# generate HOST_ONEDATA_MOUNT_POINT
+export HOST_ONEDATA_MOUNT_POINT="${HOME}/onedata-"$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
 
-## if host_base_dir and HOST_BASE_DIR are NOT provided 
-## in either INI or from CLI, define it as $HOME/deep-oc-apps/$UDOCKER_CONTAINER
-if [ ${#host_base_dir} -le 1 ] && [ ${#HOST_BASE_DIR} -le 1 ]; then
-    HOST_BASE_DIR="$HOME/deep-oc-apps/$UDOCKER_CONTAINER"
+## if host_dir is configured in INI, but no CLI option provided,
+## set HOST_DIR to host_dir
+if [ ${#host_dir} -gt 1 ] && [ ${#HOST_DIR} -le 1 ]; then
+    HOST_DIR="${host_dir}"
 fi
-## if host_base_dir is configured in INI, but no CLI option provided,
-## set HOST_BASE_DIR to host_base_dir
-if [ ${#host_base_dir} -gt 1 ] && [ ${#HOST_BASE_DIR} -le 1 ]; then
-    HOST_BASE_DIR="$host_base_dir"
-fi
-## in other cases HOST_BASE_DIR is taken from CLI
+## in other cases HOST_DIR is taken from CLI
 
-## if app_in_out_base_dir is provided in the INI, use it,
-## otherwise define it as /mnt/$UDOCKER_CONTAINER
-if [ ${#app_in_out_base_dir} -le 1 ]; then
-    APP_IN_OUT_BASE_DIR="/mnt/${UDOCKER_CONTAINER}"
-else
-    APP_IN_OUT_BASE_DIR="$app_in_out_base_dir"
-fi
+## where to mount "host_dir" *inside container*
+HOST_DIR_MOUNT_POINT="${host_dir_mount_point}"
 
-MOUNT_EXTRA_OPTIONS="$mount_extra_options"
+## if app_in_out_base_dir is provided in the INI, use it
+if [ ${#app_in_out_base_dir} -gt 1 ]; then
+    APP_IN_OUT_BASE_DIR="${app_in_out_base_dir}"
+fi
 
 ## Set RCLONE_ settings from the INI file
 RCLONE_CONF_HOST="$rclone_conf_host"
@@ -210,6 +210,10 @@ RCLONE_URL="$rclone_url"
 RCLONE_VENDOR="$rclone_vendor"
 RCLONE_USER="$rclone_user"
 RCLONE_PASSWORD="$rclone_password"
+
+## Any other possible option for udocker 
+## (e.g. "-v /tmp:/tmp" to mount host /tmp at /tmp inside the container)
+UDOCKER_EXTRA_OPTIONS="$udocker_extra_options"
 
 ## Set UDOCKER_RUN_COMMAND, if it is not set from CLI
 ## ALL OTHER PARAMETERS MUST BE CORRECTLY SET BEFORE!
@@ -226,13 +230,30 @@ fi
 
 ### Now ready to configure options for udocker and the final submission to slurm
 ## Configure UDOCKER_OPTIONS
-# Check if HOST_BASE_DIR is set and exists
-if [ ${#HOST_BASE_DIR} -gt 1 ]; then
-    [[ ! -d "$HOST_BASE_DIR" ]] && mkdir -p "$HOST_BASE_DIR"
-    MOUNT_OPTIONS="-v ${HOST_BASE_DIR}:${APP_IN_OUT_BASE_DIR} "
-else 
-    MOUNT_OPTIONS=""
+
+MOUNT_OPTIONS=""
+# Check if HOST_DIR is set and exists
+if [ ${#HOST_DIR} -gt 1 ]; then
+    [[ ! -d "$HOST_DIR" ]] && mkdir -p "$HOST_DIR"
+    # check if HOST_DIR_MOUNT_POINT is given, if not: /mnt/host
+    if [ ${#HOST_DIR_MOUNT_POINT} -le 1 ]; then
+        HOST_DIR_MOUNT_POINT=/mnt/host
+    fi
+    MOUNT_OPTIONS+="-v ${HOST_DIR}:${HOST_DIR_MOUNT_POINT} "
 fi
+
+# Check if ONECLIENT_ACCESS_TOKEN is provided
+if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 1 ]; then
+    # check if ONEDATA_MOUNT_POINT is given, if not: /mnt/onedata
+    if [ ${#ONEDATA_MOUNT_POINT} -le 1 ]; then
+        ONEDATA_MOUNT_POINT=/mnt/onedata
+    fi
+    MOUNT_OPTIONS+=" -v ${HOST_ONEDATA_MOUNT_POINT}:${ONEDATA_MOUNT_POINT}"
+fi
+export ONEDATA_MOUNT_POINT
+
+# define ports
+export PORTS_OPTIONS="-p ${deepaasPORT}:5000 -p ${monitorPORT}:6006 -p ${jupyterPORT}:8888 "
 
 ENV_OPTIONS=""
 # Define RCLONE config if user and password are provided,
@@ -251,9 +272,6 @@ else
     fi
 fi
 
-# Mount extra directories if defined
-[[ ${#MOUNT_EXTRA_OPTIONS} -ge 5 ]] && MOUNT_OPTIONS+=" ${MOUNT_EXTRA_OPTIONS}"
-
 # Add APP_INPUT_OUTPUT_BASE_DIR environment, if APP_IN_OUT_BASE_DIR is set
 if [ ${#APP_IN_OUT_BASE_DIR} -gt 5 ]; then
     ENV_OPTIONS+=" -e APP_INPUT_OUTPUT_BASE_DIR=${APP_IN_OUT_BASE_DIR}"
@@ -262,11 +280,20 @@ fi
 # Add flaat env setting
 ENV_OPTIONS+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$FLAAT_DISABLE"
 
+# Add jupyterPASSWORD, in case provided:
+if [ ${#jupyterPASSWORD} -gt 8 ]; then
+    ENV_OPTIONS+=" -e jupyterPASSWORD=${jupyterPASSWORD}"
+fi
+
+UDOCKER_OPTIONS="${PORTS_OPTIONS} ${ENV_OPTIONS} ${MOUNT_OPTIONS}"
+# Pass extra options if defined
+[[ ${#UDOCKER_EXTRA_OPTIONS} -ge 5 ]] && UDOCKER_OPTIONS+=" ${UDOCKER_EXTRA_OPTIONS}"
+
+export UDOCKER_OPTIONS=${UDOCKER_OPTIONS}
+# for logging
 export MOUNT_OPTIONS=${MOUNT_OPTIONS}
-export UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 
 ### Configure SLURM submission
-
 #... UDOCKER_USE_GPU + slurm's --gres
 export UDOCKER_USE_GPU=false
 if [ $NUM_GPUS -gt 0 ]; then
