@@ -24,7 +24,7 @@ if [ ! -f $topology_file ]; then
 fi
 
 ### EXAMPLES FOR SOME PARAMETERS
-#
+# "run_command": "deepaas-cli train --num_epochs=15"
 ###
 
 ### MAIN CALL FOR THE DEPLOYMENT
@@ -32,15 +32,16 @@ fi
 #
 export ORCHENT_URL=https://deep-paas-dev.cloud.ba.infn.it/orchestrator
 orchent depcreate $topology_file '{ "docker_image": "deephdc/deep-oc-dogs_breed_det:cpu",
-                                    "run_command": "deepaas-cli train --num_epochs=15",
+                                    "run_command": "/srv/.deep-start/run_jupyter.sh --allow-root",
                                     "recreate_container": "false",
-                                    "udocker_extra_options": "",
+                                    "udocker_extra_options": "-p 8888:8888",
                                     "onedata_space_name": "datahpc",
                                     "onedata_mount_point": "/mnt/onedata",
                                     "rclone_conf_host": "$HOME/.config/rclone/rclone.conf",
                                     "rclone_conf_container": "/srv/.rclone/rclone.conf",
                                     "app_in_out_base_dir": "/mnt/onedata/datahpc/dogs_breed",
+                                    "jupyter_password": "q2w3e4r5",
                                     "num_gpus": "0",
                                     "total_cores": "2",
                                     "queue": "standard",
-                                    "std_outerr": "log-dogs.txt" }'
+                                    "std_outerr": "log-dogs-jupyter.txt" }'

@@ -16,41 +16,56 @@ topology_template:
 
     docker_image:
       type: string
+      description: Docker image to deploy from Docker Hub
       default: deephdc/deep-oc-dogs_breed_det:cpu
       required: no
     run_command:
       type: string
+      description: Command to run inside the container
       required: no
       default: 'deepaas-cli get_metadata'
     recreate_container:
       type: boolean
+      description: If true, enforce creating container, even if it already exists
       default: false
       required: no
     udocker_extra_options:
       type: string
+      description: Any possible option for udocker (e.g. "-v /tmp:/tmp" to mount host /tmp at /tmp inside the container)
       required: no
       default: ''
     onedata_space_name:
       type: string
+      description: Name of OneData space
       required: yes
     onedata_mount_point:
       type: string
+      description: Mount point for OneData inside the container (ONEDATA_MOUNT_POINT)
       required: no
       default: "/mnt/onedata"
     rclone_conf_host:
       type: string
+      description: Full path to rclone.conf on the host
       required: no
       default: ""
     rclone_conf_container:
       type: string
+      description: Where rclone.conf is expected inside the container (full path)
       required: no
       default: "/srv/.rclone/rclone.conf"
     app_in_out_base_dir:
       type: string
+      description: Base directory for input and output data (e.g. training data, models)
       required: no
       default: ''
+    jupyter_password:
+      type: string
+      description: Password for JupyterLab (at least 9 characters!)
+      required: no
+      default: ""
     std_outerr:
       type: string
+      description: HPC job output (located in user's HOME)
       required: no
       default: 'log.txt'
     total_cores:
@@ -59,6 +74,7 @@ topology_template:
       default: 2
     num_gpus:
       type: integer
+      description: Number of required GPUs
       required: no
       default: 0
     total_nodes:
@@ -71,6 +87,7 @@ topology_template:
       default: 2
     queue:
       type: string
+      description: Name of the HPC partition (e.g. standard, tesla)
       required: no
       default: standard
 #    wall_clock:
@@ -113,3 +130,4 @@ topology_template:
           APP_IN_OUT_BASE_DIR: { get_input: app_in_out_base_dir }
           UDOCKER_RUN_COMMAND: { get_input: run_command }
           NUM_GPUS: { get_input: num_gpus }
+          jupyterPASSWORD: {get_input: jupyter_password}

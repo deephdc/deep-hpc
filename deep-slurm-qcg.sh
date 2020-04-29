@@ -37,6 +37,11 @@ fi
 UDOCKER_CONTAINER=${UDOCKER_CONTAINER//:/-}
 export UDOCKER_CONTAINER="${UDOCKER_CONTAINER}"
 
+## ports
+deepaasPORT=5000
+monitorPORT=6006
+jupyterPORT=8888
+
 ## FLAAT. IMPORTANT TO DISABLE!
 FLAAT_DISABLE="yes"
 
@@ -72,6 +77,9 @@ if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 1 ]; then
 fi
 export ONEDATA_MOUNT_POINT
 
+# define ports
+export PORTS_OPTIONS="-p ${deepaasPORT}:5000 -p ${monitorPORT}:6006 -p ${jupyterPORT}:8888 "
+
 ENV_OPTIONS=""
 # Define RCLONE config if user and password are provided,
 # otherwise mount rclone.conf from the host
@@ -97,7 +105,12 @@ fi
 # Add flaat env setting
 ENV_OPTIONS+=" -e DISABLE_AUTHENTICATION_AND_ASSUME_AUTHENTICATED_USER=$FLAAT_DISABLE"
 
-UDOCKER_OPTIONS="${ENV_OPTIONS} ${MOUNT_OPTIONS}"
+# Add jupyterPASSWORD, in case provided:
+if [ ${#jupyterPASSWORD} -gt 8 ]; then
+    ENV_OPTIONS+=" -e jupyterPASSWORD=${jupyterPASSWORD}"
+fi
+
+UDOCKER_OPTIONS="${PORTS_OPTIONS} ${ENV_OPTIONS} ${MOUNT_OPTIONS}"
 # Pass extra options if defined
 [[ ${#UDOCKER_EXTRA_OPTIONS} -ge 5 ]] && UDOCKER_OPTIONS+=" ${UDOCKER_EXTRA_OPTIONS}"
 
