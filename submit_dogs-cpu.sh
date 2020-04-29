@@ -32,7 +32,7 @@ fi
 #
 export ORCHENT_URL=https://deep-paas-dev.cloud.ba.infn.it/orchestrator
 orchent depcreate $topology_file '{ "docker_image": "deephdc/deep-oc-dogs_breed_det:cpu",
-                                    "run_command": "deepaas-cli train",
+                                    "run_command": "deepaas-cli train --num_epochs=15",
                                     "recreate_container": "false",
                                     "udocker_extra_options": "",
                                     "onedata_space_name": "datahpc",

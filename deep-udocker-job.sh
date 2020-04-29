@@ -33,8 +33,8 @@ echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (
 echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}"
 echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}"
 echo "== SLURM_JOBID: ${SLURM_JOB_ID}"
-echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : time): \
-$SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_TIMELIMIT"
+echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : gpus: gres: time): \
+$SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_GPUS : $SBATCH_GRES : $SBATCH_TIMELIMIT"
 echo ""
 
 ##### CHECK for udocker and INSTALL if missing ######
