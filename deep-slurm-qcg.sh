@@ -68,7 +68,7 @@ export UDOCKER_RUN_COMMAND="$udocker_run_command_expanded"
 
 MOUNT_OPTIONS=""
 # Check if ONECLIENT_ACCESS_TOKEN is provided
-if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 1 ]; then
+if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ]; then
     # check if ONEDATA_MOUNT_POINT is given, if not: /mnt/onedata
     if [ ${#ONEDATA_MOUNT_POINT} -le 1 ]; then
         ONEDATA_MOUNT_POINT=/mnt/onedata

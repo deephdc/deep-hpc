@@ -34,9 +34,16 @@ DOCKER_IMAGE=""
 UDOCKER_CONTAINER=""
 UDOCKER_RECREATE=""
 
+## ports
+deepaasPORT=5000
+monitorPORT=6006
+jupyterPORT=8888
+
 NUM_GPUS=""
 
 HOST_DIR=""
+HOST_DIR_MOUNT_POINT="/mnt/host"
+ONEDATA_MOUNT_POINT="/mnt/onedata"
 APP_IN_OUT_DIR=""
 UDOCKER_RUN_COMMAND=""
 
@@ -47,10 +54,11 @@ function usage()
     echo "Usage: $0 <options> \n
     Options:
     -h|--help \t\t This help message
+    -b|--base-dir \t Base directory *inside container* for input and output data (e.g. data, models)(APP_IN_OUT_BASE_DIR)
     -c|--cmd \t\t Command to run inside the Docker image
     -d|--docker \t Docker image to run
     -g|--gpus \t\t Number of GPUs to request
-    -i|--ini \t\t INI file to load for the defautl settings (full path!)
+    -i|--ini \t\t INI file to load for the default settings (full path!)
     -l|--log \t\t If provided, activates SLURM output to the file (see ${slurm_log_dir} directory)
     -p|--partition \t Choose which cluster partition to use (e.g. CPU: 'standard', GPU: 'tesla')
     -r|--recreate \t If provided, it forces re-creation of the container
@@ -59,8 +67,8 @@ function usage()
 
 function check_arguments()
 {
-    OPTIONS=h,c:,d:,g:,i:,l,p:,r,v:
-    LONGOPTS=help,cmd:,docker:,gpus:,ini:,log,partition:,recreate,volume:
+    OPTIONS=h,b:,c:,d:,g:,i:,l,p:,r,v:
+    LONGOPTS=help,base-dir:,cmd:,docker:,gpus:,ini:,log,partition:,recreate,volume:
     # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
     #set -o errexit -o pipefail -o noclobber -o nounset
     set  +o nounset
@@ -92,6 +100,10 @@ function check_arguments()
             -h|--help)
                 usage
                 shift
+                ;;
+            -b|--base-dir)
+                APP_IN_OUT_BASE_DIR="$2"
+                shift 2
                 ;;
             -c|--cmd)
                 export UDOCKER_RUN_COMMAND="$2"
@@ -173,19 +185,22 @@ fi
 
 [[ ${#NUM_GPUS} -lt 1 ]] && NUM_GPUS=$num_gpus
 
-## ports
-deepaasPORT=5000
-monitorPORT=6006
-jupyterPORT=8888
-
 ## FLAAT. IMPORTANT TO DISABLE!
 FLAAT_DISABLE=$flaat_disable
 
 ## oneclient config
 export ONECLIENT_ACCESS_TOKEN="$oneclient_access_token"
 export ONECLIENT_PROVIDER_HOST="$oneclient_provider_host"
+
 # generate HOST_ONEDATA_MOUNT_POINT
 export HOST_ONEDATA_MOUNT_POINT="${HOME}/onedata-"$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
+
+# where to mount Onedata *inside container*, default /mnt/onedata
+if [ ${#onedata_mount_point} -gt 1 ]; then
+    ONEDATA_MOUNT_POINT="${onedata_mount_point}"
+fi
+export ONEDATA_MOUNT_POINT
+
 
 ## if host_dir is configured in INI, but no CLI option provided,
 ## set HOST_DIR to host_dir
@@ -194,11 +209,13 @@ if [ ${#host_dir} -gt 1 ] && [ ${#HOST_DIR} -le 1 ]; then
 fi
 ## in other cases HOST_DIR is taken from CLI
 
-## where to mount "host_dir" *inside container*
-HOST_DIR_MOUNT_POINT="${host_dir_mount_point}"
+## where to mount "host_dir" *inside container*, default /mnt/host
+if [ ${#host_dir_mount_point} -gt 1 ]; then
+    HOST_DIR_MOUNT_POINT="${host_dir_mount_point}"
+fi
 
-## if app_in_out_base_dir is provided in the INI, use it
-if [ ${#app_in_out_base_dir} -gt 1 ]; then
+## if app_in_out_base_dir is provided in the INI, and no CLI option
+if [ ${#app_in_out_base_dir} -gt 1 ] && [ ${#APP_IN_OUT_BASE_DIR} -le 1 ]; then
     APP_IN_OUT_BASE_DIR="${app_in_out_base_dir}"
 fi
 
@@ -235,22 +252,15 @@ MOUNT_OPTIONS=""
 # Check if HOST_DIR is set and exists
 if [ ${#HOST_DIR} -gt 1 ]; then
     [[ ! -d "$HOST_DIR" ]] && mkdir -p "$HOST_DIR"
-    # check if HOST_DIR_MOUNT_POINT is given, if not: /mnt/host
-    if [ ${#HOST_DIR_MOUNT_POINT} -le 1 ]; then
-        HOST_DIR_MOUNT_POINT=/mnt/host
-    fi
     MOUNT_OPTIONS+="-v ${HOST_DIR}:${HOST_DIR_MOUNT_POINT} "
 fi
 
 # Check if ONECLIENT_ACCESS_TOKEN is provided
-if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 1 ]; then
-    # check if ONEDATA_MOUNT_POINT is given, if not: /mnt/onedata
-    if [ ${#ONEDATA_MOUNT_POINT} -le 1 ]; then
-        ONEDATA_MOUNT_POINT=/mnt/onedata
-    fi
+if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ]; then
+    # check if the local mount point exists
+    [[ ! -d "${HOST_ONEDATA_MOUNT_POINT}" ]] && mkdir -p "${HOST_ONEDATA_MOUNT_POINT}"
     MOUNT_OPTIONS+=" -v ${HOST_ONEDATA_MOUNT_POINT}:${ONEDATA_MOUNT_POINT}"
 fi
-export ONEDATA_MOUNT_POINT
 
 # define ports
 export PORTS_OPTIONS="-p ${deepaasPORT}:5000 -p ${monitorPORT}:6006 -p ${jupyterPORT}:8888 "
