@@ -27,13 +27,17 @@ topology_template:
     recreate_container:
       type: boolean
       description: If true, enforce creating container, even if it already exists
-      default: false
       required: no
+      default: false
+      constraints:
+      - valid_values: [ false, true ]
     delete_after:
       type: boolean
       description: Delete the container after job has finished (True) or keep it (False)
-      default: false
       required: no
+      default: false
+      constraints:
+      - valid_values: [ false, true ]
     udocker_extra_options:
       type: string
       description: Any other possible option for udocker (e.g. "-v /tmp:/tmp" to mount host /tmp at /tmp inside the container)

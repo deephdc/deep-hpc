@@ -12,13 +12,13 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
    - ``SLURM_LOG`` : if true, the batch script's standard output is directed to the file (default false)
    - ``SLURM_EXTRA_OPTIONS`` : any other SLURM option to activate, e.g. "--time=12:00:00" would limit execution time to 12 hours. For more info, please, check [sbatch](https://slurm.schedmd.com/sbatch.html)
    - ``DOCKER_IMAGE`` : which docker image to use.
-   - ``UDOCKER_CONTAINER`` : OPTIONAL! It is interannly derived from DOCKER_IMAGE, but one can re-define it by providing the value here. If empty, ``udocker_container`` is defined by removing the repository name and "deep-oc-" if present, and adding the tag into the name. For example: ``docker_image=deephdc/deep-oc-dogs_breed_det:gpu`` becomes ``udocker_container=dogs_breed_det-gpu``
+   - ``UDOCKER_CONTAINER`` : OPTIONAL! It is internaly derived from DOCKER_IMAGE, but one can re-define it by providing the value here. If empty, ``UDOCKER_CONTAINER`` is defined by removing the repository name and "deep-oc-" if present, and adding the tag into the name. For example: ``docker_image=deephdc/deep-oc-dogs_breed_det:gpu`` becomes ``udocker_container=dogs_breed_det-gpu``
    - ``UDOCKER_RECREATE`` : if true, enforce creating container, even if it already exists.
    - ``UDOCKER_DELETE_AFTER`` : delete the container when job has finished (true) or keep (false).
    - ``NUM_GPUS`` : number of GPUs to be used on one node.
    - ``FLAAT_DISABLE`` : if true, it disables [flaat](https://github.com/indigo-dc/flaat) authentication.
-   - ``ONECLIENT_ACCESS_TOKEN`` : ACCESS TOKEN for oneclient (not tested yet!)
-   - ``ONECLIENT_PROVIDER_HOST`` : which ONEDATA provider to connect to. (not tested yet!)
+   - ``ONECLIENT_ACCESS_TOKEN`` : ACCESS TOKEN for oneclient.
+   - ``ONECLIENT_PROVIDER_HOST`` : which ONEDATA provider to connect to.
    - ``ONEDATA_MOUNT_POINT`` : in what directory to mount the onedata space **inside the container** (default /mnt/onedata)
    - ``HOST_DIR`` : directory on the host, where e.g. ~/data and ~/models directories are located.
    - ``HOST_DIR_MOUNT_POINT`` : where to mount $HOST_DIR *inside the container* (default /mnt/host).

@@ -132,13 +132,14 @@ udocker run ${UDOCKER_OPTIONS} ${UDOCKER_CONTAINER} /bin/bash <<EOF
 ${UDOCKER_RUN_COMMAND}
 EOF
 
-echo "==[/RUN]"
+echo "== [/RUN]"
 echo ""
 
-echo "[ONEDATA] Unmount ${HOST_ONEDATA_MOUNT_POINT}"
+echo "== [POST_RUN, ONEDATA: $(print_date) ] Unmount ${HOST_ONEDATA_MOUNT_POINT}"
 oneclient -u ${HOST_ONEDATA_MOUNT_POINT}
 
 if echo ${UDOCKER_DELETE_AFTER} |grep -iqF "true"; then
-    echo "[INFO: $(print_date) ] Deleting container ${UDOCKER_CONTAINER} ..."
+    echo "== [POST_RUN, UDOCKER: $(print_date) ] Deleting container ${UDOCKER_CONTAINER} ..."
     udocker rm ${UDOCKER_CONTAINER}
 fi
+echo "== [/POST_RUN]"

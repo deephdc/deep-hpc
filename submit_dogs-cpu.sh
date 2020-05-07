@@ -9,6 +9,8 @@ topology_file="qcg-job.yaml"
 
 USAGEMESSAGE="[Usage]: $0 [topology yaml file, default=$topology_file]"
 
+DATENOW=$(date +'%y%m%d_%H%M%S')
+
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     shopt -s xpg_echo
     echo $USAGEMESSAGE
@@ -24,7 +26,9 @@ if [ ! -f $topology_file ]; then
 fi
 
 ### EXAMPLES FOR SOME PARAMETERS
-# "run_command": "deepaas-cli train --num_epochs=15"
+# "run_command": "deepaas-cli train --num_epochs=15",
+# "run_command": "/srv/.deep-start/run_jupyter.sh --allow-root",
+# "jupyter_password": "xxxxxxxx"
 ###
 
 ### MAIN CALL FOR THE DEPLOYMENT
@@ -32,16 +36,16 @@ fi
 #
 export ORCHENT_URL=https://deep-paas-dev.cloud.ba.infn.it/orchestrator
 orchent depcreate $topology_file '{ "docker_image": "deephdc/deep-oc-dogs_breed_det:cpu",
-                                    "run_command": "/srv/.deep-start/run_jupyter.sh --allow-root",
+                                    "run_command": "deepaas-cli train --num_epochs=15",
                                     "recreate_container": "true",
+                                    "delete_after": "true",
                                     "udocker_extra_options": "",
                                     "onedata_space_name": "datahpc",
                                     "onedata_mount_point": "/mnt/onedata",
                                     "rclone_conf_host": "$HOME/.config/rclone/rclone.conf",
                                     "rclone_conf_container": "/srv/.rclone/rclone.conf",
                                     "app_in_out_base_dir": "/mnt/onedata/datahpc/dogs_breed",
-                                    "jupyter_password": "q2w3e4r5t6",
                                     "num_gpus": "0",
                                     "total_cores": "2",
                                     "queue": "standard",
-                                    "std_outerr": "log-dogs-jupyter.txt" }'
+                                    "std_outerr": "log-dogs-train.txt" }'
