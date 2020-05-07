@@ -35,6 +35,8 @@ if [[ "$UDOCKER_CONTAINER" =~ "deep-oc-".* ]]; then
 fi
 # replace ":" with "-"
 UDOCKER_CONTAINER=${UDOCKER_CONTAINER//:/-}
+# remove "."
+UDOCKER_CONTAINER=${UDOCKER_CONTAINER//./}
 export UDOCKER_CONTAINER="${UDOCKER_CONTAINER}"
 
 ## ports

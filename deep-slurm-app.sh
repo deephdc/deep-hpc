@@ -177,6 +177,8 @@ if [ ${#UDOCKER_CONTAINER} -le 1 ]; then
     # replace ":" with "-"
     UDOCKER_CONTAINER=${UDOCKER_CONTAINER//:/-}
 fi
+# remove "."
+UDOCKER_CONTAINER=${UDOCKER_CONTAINER//./}
 export UDOCKER_CONTAINER="${UDOCKER_CONTAINER}"
 
 [[ ${#num_gpus} -ge 1 ]] && NUM_GPUS=$num_gpus
