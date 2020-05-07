@@ -63,8 +63,9 @@ export UDOCKER_RUN_COMMAND="$udocker_run_command_expanded"
 ### [/Fixed Parameters set]
 
 
+### [Configure UDOCKER_OPTIONS]
 ### Now ready to configure options for udocker and the final submission to slurm
-## Configure UDOCKER_OPTIONS
+
 
 MOUNT_OPTIONS=""
 # Check if ONECLIENT_ACCESS_TOKEN is provided

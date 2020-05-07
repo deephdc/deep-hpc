@@ -29,6 +29,11 @@ topology_template:
       description: If true, enforce creating container, even if it already exists
       default: false
       required: no
+    delete_after:
+      type: boolean
+      description: Delete the container after job has finished (True) or keep it (False)
+      default: false
+      required: no
     udocker_extra_options:
       type: string
       description: Any other possible option for udocker (e.g. "-v /tmp:/tmp" to mount host /tmp at /tmp inside the container)
@@ -131,6 +136,7 @@ topology_template:
         environment:
           DOCKER_IMAGE: { get_input: docker_image }
           UDOCKER_RECREATE: { get_input: recreate_container }
+          UDOCKER_DELETE_AFTER: {get_input: delete_after }
           UDOCKER_EXTRA_OPTIONS: { get_input: udocker_extra_options }
           ONECLIENT_ACCESS_TOKEN: { get_attribute : [ onedata_space, token ] }
           ONECLIENT_PROVIDER_HOST: "oneprovider-beta-2.cloud.ba.infn.it"

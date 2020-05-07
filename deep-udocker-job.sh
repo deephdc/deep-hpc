@@ -30,7 +30,7 @@ echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}"
 ## (!) Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
 echo "== UDOCKER MOUNT_OPTIONS: ${MOUNT_OPTIONS}"
 echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (!)"
-echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}"
+# echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}"
 echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}"
 echo "== SLURM_JOBID: ${SLURM_JOB_ID}"
 echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : gpus: gres: time): \
@@ -80,7 +80,7 @@ fi
 echo ""
 
 ##### RUN THE JOB #####
-IFContainerExists=$(udocker ps |grep "${UDOCKER_CONTAINER}")
+IFContainerExists=$(udocker ps |grep "'${UDOCKER_CONTAINER}'")
 IFImageExists=$(echo ${IFContainerExists} |grep "${DOCKER_IMAGE}")
 if [ ${#IFImageExists} -le 1 ] || [ ${#IFContainerExists} -le 1 ] || echo ${UDOCKER_RECREATE} |grep -iqF "true"; then
     echo "== [INFO: $(print_date) ]"
@@ -137,3 +137,8 @@ echo ""
 
 echo "[ONEDATA] Unmount ${HOST_ONEDATA_MOUNT_POINT}"
 oneclient -u ${HOST_ONEDATA_MOUNT_POINT}
+
+if echo ${UDOCKER_DELETE_AFTER} |grep -iqF "true"; then
+    echo "[INFO: $(print_date) ] Deleting container ${UDOCKER_CONTAINER} ..."
+    udocker rm ${UDOCKER_CONTAINER}
+fi
