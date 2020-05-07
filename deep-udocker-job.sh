@@ -30,10 +30,11 @@ echo "== UDOCKER_CONTAINER: ${UDOCKER_CONTAINER}"
 ## (!) Comment UDOCKER_OPTIONS, as this may publish AUTHENTICATION info:
 echo "== UDOCKER MOUNT_OPTIONS: ${MOUNT_OPTIONS}"
 echo "== (!) UDOCKER ENVIRONMENT OPTIONS are NOT PRINTED for security reasons! (!)"
+# echo "== UDOCKER_OPTIONS: ${UDOCKER_OPTIONS}"
 echo "== UDOCKER_RUN_COMMAND: ${UDOCKER_RUN_COMMAND}"
 echo "== SLURM_JOBID: ${SLURM_JOB_ID}"
-echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : time): \
-$SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_TIMELIMIT"
+echo "== SLURM_OPTIONS (partition : nodes : ntasks-per-node : gpus: gres: time): \
+$SLURM_JOB_PARTITION : $SLURM_JOB_NODELIST : $SLURM_NTASKS_PER_NODE :  $SBATCH_GPUS : $SBATCH_GRES : $SBATCH_TIMELIMIT"
 echo ""
 
 ##### CHECK for udocker and INSTALL if missing ######
@@ -57,26 +58,29 @@ else
    fi
 fi
 echo "== [/udocker check]"
+echo ""
 
 ##### MOUNT ONEDATA on the HOST #####
 if [ ${#ONECLIENT_ACCESS_TOKEN} -gt 8 ] && [ ${#ONECLIENT_PROVIDER_HOST} -gt 8 ]; then
-   # check if the local mount point exists
-   if [ ! -d "${ONEDATA_MOUNT_POINT}" ]; then
-       mkdir -p ${ONEDATA_MOUNT_POINT}
-   fi
    echo "== [ONEDATA: $(print_date) ]"
    echo "...ONECLIENT_PROVIDER_HOST = ${ONECLIENT_PROVIDER_HOST}"
-   echo "...ONEDATA_MOUNT_POINT = ${ONEDATA_MOUNT_POINT}"
+   echo "...HOST_ONEDATA_MOUNT_POINT = ${HOST_ONEDATA_MOUNT_POINT}"
    oneclient --version
-   oneclient ${ONEDATA_MOUNT_POINT}
-   ls ${ONEDATA_MOUNT_POINT}
+
+   # check if the local mount point exists
+   if [ ! -d "${HOST_ONEDATA_MOUNT_POINT}" ]; then
+       mkdir -p ${HOST_ONEDATA_MOUNT_POINT}
+   fi
+   oneclient ${HOST_ONEDATA_MOUNT_POINT}
+   echo "...checking the content of ${HOST_ONEDATA_MOUNT_POINT}:"
+   ls -la ${HOST_ONEDATA_MOUNT_POINT}
    echo "== [/ONEDATA]"
 fi
 ####
 echo ""
 
 ##### RUN THE JOB #####
-IFContainerExists=$(udocker ps |grep "${UDOCKER_CONTAINER}")
+IFContainerExists=$(udocker ps |grep "'${UDOCKER_CONTAINER}'")
 IFImageExists=$(echo ${IFContainerExists} |grep "${DOCKER_IMAGE}")
 if [ ${#IFImageExists} -le 1 ] || [ ${#IFContainerExists} -le 1 ] || echo ${UDOCKER_RECREATE} |grep -iqF "true"; then
     echo "== [INFO: $(print_date) ]"
@@ -114,9 +118,7 @@ echo ""
 echo "== [DEEPaaS: $(print_date) ]"
 udocker run ${UDOCKER_CONTAINER} /bin/bash <<EOF
 if [ ! -f /usr/bin/deepaas-cli ] && [ ! -f /usr/local/bin/deepaas-cli ]; then
-    [[ -d DEEPaaS ]] && rm -rf DEEPaaS
-    git clone -b deep_cli https://github.com/indigo-dc/DEEPaaS
-    pip install -e DEEPaaS
+    pip install --no-cache-dir 'deepaas>=1.3.0'
 else
     echo "= deepaas-cli is found"
 fi
@@ -130,4 +132,14 @@ udocker run ${UDOCKER_OPTIONS} ${UDOCKER_CONTAINER} /bin/bash <<EOF
 ${UDOCKER_RUN_COMMAND}
 EOF
 
-echo "==[/RUN]"
+echo "== [/RUN]"
+echo ""
+
+echo "== [POST_RUN, ONEDATA: $(print_date) ] Unmount ${HOST_ONEDATA_MOUNT_POINT}"
+oneclient -u ${HOST_ONEDATA_MOUNT_POINT}
+
+if echo ${UDOCKER_DELETE_AFTER} |grep -iqF "true"; then
+    echo "== [POST_RUN, UDOCKER: $(print_date) ] Deleting container ${UDOCKER_CONTAINER} ..."
+    udocker rm ${UDOCKER_CONTAINER}
+fi
+echo "== [/POST_RUN]"
