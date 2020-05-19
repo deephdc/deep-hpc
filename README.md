@@ -31,7 +31,7 @@ It relies on the [udocker tool](https://github.com/indigo-dc/udocker) for unpriv
    - ``RCLONE_URL`` : remote storage link to be accessed via rclone.
    - ``RCLONE_USER`` : rclone user to access a remote storage.
    - ``RCLONE_PASSWORD`` : rclone password to access a remote storage.
-   - ``jupyterPASSWORD`` : set password for JupyterNotebook or JupyterLab (if installed inside container).
+   - ``jupyterPASSWORD`` : set password for JupyterNotebook or JupyterLab (if installed inside container). MUST BE *at least* 9 characters long!
    - ``UDOCKER_RUN_COMMAND`` : configure the command to run inside the container.
 
 * ``deep-slurm-app.sh``   - script that configure the job submission (slurm). A user should not really change it. It reads ``deep-slurm-app.ini`` for default settings but some options can be re-defined from the command line:
